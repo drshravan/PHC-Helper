@@ -1,7 +1,7 @@
 {
-  "name": "phc-helper",
+  "name": "PHC-Helper",
   "private": true,
-  "homepage": "https://drshravan.github.io/phc-helper",
+  "homepage": "https://drshravan.github.io/PHC-Helper",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
