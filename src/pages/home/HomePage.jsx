@@ -15,7 +15,7 @@ export default function HomePage() {
 
         <div className="home-links">
           <Link className="home-link" to="/dogbite">
-            🐶 Dog Bite Management
+            🐶 Dog Bite Management 
           </Link>
           <Link className="home-link" to="/Eddlist">
             🤰 EDD List
