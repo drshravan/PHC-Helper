@@ -8,6 +8,7 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 // ✅ Import your page components (default exports)
 import HomePage from './pages/home/HomePage'
 import Dogbite from './pages/dogbite/dogbite'
+import Eddlist from './pages/edd/EDDList'
 
 // ✅ Main App component
 function App() {
@@ -18,6 +19,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/dogbite" element={<Dogbite />} />
+        <Route path="/eddlist" element={<Eddlist />} />
       </Routes>
     </Router>
   )
