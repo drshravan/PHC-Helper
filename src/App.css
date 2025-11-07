@@ -45,25 +45,23 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #f8faff 0%, #e3f2fd 100%);
+ 
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .home-card {
-  background: white;
+  background: #c2d6c1;
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgb(255, 255, 255);
   text-align: center;
-  width: 90%;
-  max-width: 400px;
+
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .home-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 5px 20px rgb(228, 253, 0);
 }
 
 .home-title {
