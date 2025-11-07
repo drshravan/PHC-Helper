@@ -14,12 +14,24 @@ export default function HomePage() {
         <p className="home-subtitle">Choose an option below to continue</p>
 
         <div className="home-links">
+
+          {/* Dog bite screen route */}
           <Link className="home-link" to="/dogbite">
             🐶 Dog Bite Management 
           </Link>
-          <Link className="home-link" to="/Eddlist">
+
+          {/* EDD list screen route */}
+          <Link className="home-link" to="/eddlist">
             🤰 EDD List
           </Link>
+
+          {/* PHC data screen route */}
+          <Link className="home-link" to="/phcdata">
+            🏥 PHC Data
+          </Link>
+
+
+          
         </div>
       </div>
     </div>
