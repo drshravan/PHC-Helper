@@ -10,6 +10,7 @@ import HomePage from './pages/home/HomePage'
 import Dogbite from './pages/dogbite/dogbite'
 import Eddlist from './pages/edd/EDDList'
 import PHCData from './pages/phcdata/PHCData'
+import TestPage from './pages/testpage/testpage'
 
 
 
@@ -24,6 +25,7 @@ function App() {
         <Route path="/dogbite" element={<Dogbite />} />
         <Route path="/eddlist" element={<Eddlist />} />
         <Route path="/phcdata" element={<PHCData />} />
+        <Route path="/testpage" element={<TestPage />} />
       </Routes>
     </Router>
   )

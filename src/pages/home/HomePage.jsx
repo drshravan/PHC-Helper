@@ -30,6 +30,11 @@ export default function HomePage() {
             🏥 PHC Data
           </Link>
 
+           {/* test page */}
+          <Link className="home-link" to="/testpage">
+            🧪 Test Page
+          </Link>
+
 
           
         </div>
