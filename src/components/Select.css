@@ -1,0 +1,35 @@
+.custom-select {
+    position: relative;
+    width: 100%;
+  }
+  
+  .select-header {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+  }
+  
+  .select-option {
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  .select-option:hover {
+    background-color: #f0f0f0;
+  }
+  

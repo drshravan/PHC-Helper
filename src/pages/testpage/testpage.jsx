@@ -10,8 +10,7 @@ export default function TestPage() {
     return (
         <div
             style={{
-                height: "80vh",
-                width: "60vw",
+                maxWidth: "1280px",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
@@ -21,7 +20,7 @@ export default function TestPage() {
                 border: "2px solid #ccc",
                 borderRadius: "10px",
                 backgroundColor: "#f9f9f9",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.53)",
                 textAlign: "center",
             }}
         >
@@ -85,6 +84,21 @@ export default function TestPage() {
                     <li key={index}>{item}</li>
                 ))}
             </ul>
+            <div style={
+                {
+                    color : "red",
+                    maxHeight: "2560px",
+                    minHeight: "1000px",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    marginTop: "10px",
+                    fontSize: "18px",
+                    fontFamily: "Verdana, sans-serif",
+                }
+            }>
+                
+            </div>
+
         </div>
     );
 }
