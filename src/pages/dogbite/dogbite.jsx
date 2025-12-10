@@ -56,12 +56,14 @@ export default function Dogbite() {
 
       <div className="date-picker-card">
         <label htmlFor="bite-date">Date of Bite (Day 0):</label>
-        <input 
+        <div className='date-picker-input'>
+        <input
           type="date" 
           id="bite-date" 
           value={biteDate} 
           onChange={(e) => setBiteDate(e.target.value)}
         />
+        </div>
       </div>
 
       <div className="schedule-list">
