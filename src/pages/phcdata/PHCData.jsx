@@ -65,7 +65,7 @@ export default function PHCData() {
                 const gpRowSpan = villages.length;
                 let gpRendered = false;
 
-                return villages.map((village, vIndex) => (
+                return villages.map((village) => (
                   <tr key={`${subCentre}-${gp}-${village.village}`}>
                     {!subCentreRendered && (
                       <>

@@ -1,5 +1,4 @@
 // ✅ React and core imports
-import { useState } from 'react'
 import './App.css'
 
 // ✅ Import routing components
@@ -12,13 +11,10 @@ import Eddlist from './pages/edd/EDDList'
 import PHCData from './pages/phcdata/PHCData'
 import TestPage from './pages/testpage/testpage'
 import AncDetails from './pages/anc/AncDetails'
-
-
+import PregnancyCalculator from './pages/Pregnancy_Calculator/PregnancyCalculator.jsx'
 
 // ✅ Main App component
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <Router>
       <Routes>
@@ -28,6 +24,7 @@ function App() {
         <Route path="/phcdata" element={<PHCData />} />
         <Route path="/testpage" element={<TestPage />} />
         <Route path="/anc/:id" element={<AncDetails />} />
+        <Route path="/PregnancyCalculator" element={<PregnancyCalculator />} />
       </Routes>
     </Router>
   )

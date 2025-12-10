@@ -1,0 +1,202 @@
+/* === Root Variables === */
+:root {
+    --bg-dark-noise: #1a1a1a url('https://www.transparenttextures.com/patterns/noise.png');
+    --card-bg: #2c2c2c;
+    --text-main: #f0f0f0;
+    --text-muted: #a0a0a0;
+    --border-color: #4a4a4a;
+
+    /* Status & Accent Colors */
+    --active-glow: #00ffc3;
+    --active-bg: rgba(0, 255, 195, 0.1);
+    --future-blue: #007bff;
+    --past-gray: #6c757d;
+    --past-bg: #3a3a3a;
+}
+
+.dog-bite-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    background: var(--bg-dark-noise);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+.db-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.back-arrow {
+    font-size: 28px;
+    color: var(--active-glow);
+    cursor: pointer;
+    text-shadow: 0 0 12px var(--active-glow);
+    transition: transform 0.2s ease;
+}
+.back-arrow:hover {
+    transform: translateX(-5px);
+}
+
+.db-header h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 0 15px;
+}
+
+.date-picker-card {
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.date-picker-card label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.date-picker-card input[type="date"] {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background-color: #1a1a1a;
+    color: var(--text-main);
+    font-size: 18px;
+    font-weight: 500;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    cursor: pointer;
+}
+
+.schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.schedule-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 15px;
+    background-color: var(--card-bg);
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.schedule-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    border-color: var(--active-glow);
+}
+
+/* --- Dose Number Badge --- */
+.dose-number-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--bg-dark-noise);
+    background-color: var(--text-muted);
+}
+
+/* --- Dose Info Section --- */
+.dose-info .dose-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.dose-info .dose-date {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* --- Weekday --- */
+.dose-weekday {
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: right;
+}
+
+
+/* === Status-Specific Styling === */
+
+/* PAST DOSE */
+.past-dose {
+    background-color: var(--past-bg);
+    opacity: 0.7;
+}
+.past-dose .dose-info .dose-title,
+.past-dose .dose-info .dose-date,
+.past-dose .dose-weekday {
+    text-decoration: line-through;
+    color: var(--past-gray);
+}
+.past-dose .dose-number-badge {
+    background-color: var(--past-gray);
+    color: var(--card-bg);
+}
+
+/* FUTURE DOSE */
+.future-dose .dose-weekday {
+    color: var(--future-blue);
+}
+.future-dose .dose-number-badge {
+    background-color: var(--future-blue);
+}
+.future-dose .dose-info .dose-date {
+    color: var(--future-blue);
+}
+
+
+/* ACTIVE DOSE (TODAY) */
+.active-dose {
+    background: var(--active-bg);
+    border-color: var(--active-glow);
+    box-shadow: 0 0 20px rgba(0, 255, 195, 0.25);
+}
+.active-dose .dose-number-badge {
+    background-color: var(--active-glow);
+    color: #000;
+    box-shadow: 0 0 12px var(--active-glow);
+}
+.active-dose .dose-info .dose-date {
+    color: var(--active-glow);
+    font-weight: 700;
+}
+.active-dose .dose-weekday {
+    font-weight: bold;
+    color: var(--active-glow);
+}
+
+/* This is a subtle marker for today's dose */
+.today-marker {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 15px 15px 0;
+    border-color: transparent var(--active-glow) transparent transparent;
+}

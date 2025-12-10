@@ -35,6 +35,9 @@ export default function HomePage() {
             🧪 Test Page
           </Link>
 
+          <Link className="home-link" to="/PregnancyCalculator">
+          PregnancyCalculator
+          </Link>
 
           
         </div>
@@ -42,5 +45,8 @@ export default function HomePage() {
     </div>
   )
 }
+
+
+
 
   
