@@ -7,9 +7,9 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 // ✅ Page components
 import HomePage from './pages/home/HomePage'
 import Dogbite from './pages/dogbite/Dogbite'
-import Eddlist from './pages/edd/EDDList'
+import Eddlist from './pages/anc/edd/EDDList'
 import PHCData from './pages/phcdata/PHCData'
-import TestPage from './pages/testpage/TestPage'
+import TestPage from './pages/testpage/testpage'
 import AncDetails from './pages/anc/AncDetails'
 import PregnancyCalculator from './pages/Pregnancy_Calculator/PregnancyCalculator'
 import NCD from './pages/ncd/NCD'   // ✅ ADD THIS

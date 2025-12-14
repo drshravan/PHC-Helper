@@ -1,4 +1,4 @@
-export default function testPage(){
+export default function TestPage(){
     return(
         <div>
             <h1>Test Page</h1>
