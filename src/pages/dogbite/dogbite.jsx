@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import './Dogbite.css'; // Make sure to create this file
+import { useNavigate } from 'react-router-dom';
+import './dogbite.css';
 
 export default function Dogbite() {
   // Default to current date formatted as YYYY-MM-DD for the input
@@ -7,6 +8,8 @@ export default function Dogbite() {
     const today = new Date();
     return today.toISOString().split('T')[0];
   };
+
+  const navigate = useNavigate();
 
   const [biteDate, setBiteDate] = useState(getTodayString());
 
@@ -49,8 +52,8 @@ export default function Dogbite() {
   return (
     <div className="dog-bite-container">
         <div className="db-header">
-            <span className="back-arrow" onClick={() => window.history.back()}>←</span>
-            <h2>Rabies PEP Schedule</h2>
+          <span className="back-arrow" onClick={() => navigate('/')}>←</span>
+          <h2>Rabies Vaccination Schedule</h2>
         </div>
 
       <div className="date-picker-card">

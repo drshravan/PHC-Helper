@@ -92,7 +92,7 @@ const PregnancyCalculator = () => {
     return (
         <div className="pc-container">
             <header className="pc-header">
-                <span className="back-arrow" onClick={() => navigate(-1)}>←</span>
+                <span className="back-arrow" onClick={() => navigate('/')}>←</span>
                 <h2>Pregnancy Calculator</h2>
             </header>
 
