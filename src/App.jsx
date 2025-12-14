@@ -25,6 +25,7 @@ function App() {
         <Route path="/testpage/*" element={<TestPage />} />
         <Route path="/anc/:id" element={<AncDetails />} />
         <Route path="/PregnancyCalculator" element={<PregnancyCalculator />} />
+        <Route path="/ncd" element={<NCD />} />
       </Routes>
     </Router>
   )

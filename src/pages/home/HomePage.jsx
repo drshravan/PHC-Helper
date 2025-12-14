@@ -15,6 +15,11 @@ export default function HomePage() {
 
         <div className="home-links">
 
+           {/* NCD screen route */}
+          <Link className="home-link" to="/ncd">
+            🐶 Dog Bite Management 
+          </Link>
+
           {/* Dog bite screen route */}
           <Link className="home-link" to="/dogbite">
             🐶 Dog Bite Management 
