@@ -104,4 +104,19 @@
   .status-aborted {
     background-color: #dc3545;
   }
+
+  .group-header {
+  background-color: #f7f7f7;
+  padding: 10px;
+  cursor: pointer;
+  margin: 0;
+  transition: background-color 0.3s ease;
+}
+
+/* ✅ WHEN GROUP IS OPEN */
+.group-header.active {
+  background-color: #007bff;   /* blue */
+  color: #ffffff;
+}
+
   

@@ -1,10 +1,7 @@
-
 // ✅ Home Page component
 
 import { Link } from "react-router-dom"
 import "./HomePage.css"
-
-
 
 export default function HomePage() {
   return (
@@ -15,14 +12,14 @@ export default function HomePage() {
 
         <div className="home-links">
 
-           {/* NCD screen route */}
+          {/* NCD screen route */}
           <Link className="home-link" to="/ncd">
-            🐶 Dog Bite Management 
+            🩺 NCD Screening
           </Link>
 
           {/* Dog bite screen route */}
           <Link className="home-link" to="/dogbite">
-            🐶 Dog Bite Management 
+            🐶 Dog Bite Management
           </Link>
 
           {/* EDD list screen route */}
@@ -36,22 +33,17 @@ export default function HomePage() {
           </Link>
 
           {/* Pregnancy calculator screen route */}
-          <Link className="home-link" to="/PregnancyCalculator">
-          PregnancyCalculator
+          <Link className="home-link" to="/pregnancy-calculator">
+            📅 Pregnancy Calculator
           </Link>
 
-           {/* test page */}
+          {/* Test page */}
           <Link className="home-link" to="/testpage">
             🧪 Test Page
           </Link>
-          
+
         </div>
       </div>
     </div>
   )
 }
-
-
-
-
-  

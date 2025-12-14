@@ -1,6 +1,10 @@
 .anc-details-container {
     padding: 20px;
     font-family: sans-serif;
+    background-color: black;
+    color: white;
+    min-width: min-content;
+    min-height: 100vh;
   }
   
   .anc-details-form {
@@ -18,12 +22,16 @@
   .form-group {
     display: flex;
     flex-direction: column;
+    
   }
   
   .form-group label {
     margin-bottom: 5px;
     font-weight: bold;
     text-transform: capitalize;
+    color: yellowgreen;
+    font-size: 16px;
+    text-align: left;
   }
   
   .form-group input {
@@ -47,4 +55,59 @@
     font-size: 12px;
     margin-top: 5px;
   }
+
+  .select-option {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #c1c1c1;
+    background-color: rgb(35, 35, 35);
+    color: rgb(248, 248, 248);
+    cursor: pointer
+  }
+
+  .select-option:hover {
   
+  transform-origin: 10%;
+    background-color: #555;
+    color: white;
+}
+  
+.select-header{
+    text-align: left;
+    margin-bottom: 5px;
+    font-weight: bold;
+    text-transform: capitalize;
+    color: transparent;
+    font-size: 16px;
+}
+
+.buttons-container {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    color: white;
+}
+
+.anc-group {
+  background-color: #000000;
+  padding: 10px;
+  border-radius: 5px
+}
+
+.group-header{
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  background-color: transparent;
+  color: white
+}
+
+  
+  @media (max-width: 600px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }

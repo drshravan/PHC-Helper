@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ancData } from '../edd/anc_data';
+import { ancData } from './edd/anc_data';
 import Select from '../../components/Select';
 import './AncDetails.css';
 
