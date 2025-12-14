@@ -36,7 +36,7 @@ export default function HomePage() {
           </Link>
 
           <Link className="home-link" to="/PregnancyCalculator">
-          PregnancyCalculator
+          🤰 Pregnancy Calculator
           </Link>
 
           
