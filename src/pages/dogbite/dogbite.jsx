@@ -22,7 +22,7 @@ export default function Dogbite() {
       const doseDate = new Date(start);
       doseDate.setDate(start.getDate() + offset);
 
-      const dateStr = doseDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const dateStr = doseDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'numeric', year: 'numeric' });
       const weekday = doseDate.toLocaleDateString('en-GB', { weekday: 'long' });
 
       const today = new Date();

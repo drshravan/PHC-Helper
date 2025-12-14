@@ -30,14 +30,17 @@ export default function HomePage() {
             🏥 PHC Data
           </Link>
 
+          {/* Pregnancy calculator screen route */}
+          <Link className="home-link" to="/PregnancyCalculator">
+          PregnancyCalculator
+          </Link>
+
            {/* test page */}
           <Link className="home-link" to="/testpage">
             🧪 Test Page
           </Link>
 
-          <Link className="home-link" to="/PregnancyCalculator">
-          PregnancyCalculator
-          </Link>
+          
 
           
         </div>
