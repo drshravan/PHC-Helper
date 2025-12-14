@@ -22,7 +22,7 @@ function App() {
         <Route path="/dogbite" element={<Dogbite />} />
         <Route path="/eddlist" element={<Eddlist />} />
         <Route path="/phcdata" element={<PHCData />} />
-        <Route path="/testpage" element={<TestPage />} />
+        <Route path="/testpage/*" element={<TestPage />} />
         <Route path="/anc/:id" element={<AncDetails />} />
         <Route path="/PregnancyCalculator" element={<PregnancyCalculator />} />
       </Routes>

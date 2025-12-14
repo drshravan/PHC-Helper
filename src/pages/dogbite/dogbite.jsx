@@ -28,7 +28,6 @@ export default function Dogbite() {
       const today = new Date();
       const isToday = doseDate.toDateString() === today.toDateString();
       const isPast = doseDate < new Date(today.setHours(0,0,0,0));
-      const isFuture = !isToday && !isPast;
 
       let status = 'future';
       if (isToday) status = 'active';

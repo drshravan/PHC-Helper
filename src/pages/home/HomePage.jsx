@@ -40,7 +40,13 @@ export default function HomePage() {
             🧪 Test Page
           </Link>
 
+<<<<<<< HEAD
           
+=======
+          <Link className="home-link" to="/PregnancyCalculator">
+          🤰 Pregnancy Calculator
+          </Link>
+>>>>>>> 54e2503290e65cd7688e06c490e72ed25535334e
 
           
         </div>
