@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './dogbite.css';
+import './Dogbite.css';
 
 export default function Dogbite() {
   // Default to current date formatted as YYYY-MM-DD for the input
