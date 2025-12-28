@@ -1,0 +1,105 @@
+.home-wrapper {
+  padding: 20px;
+  padding-right: 24px;
+  /* Slightly more padding on right to prevent shadow crop */
+  padding-top: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  /* Ensure padding doesn't affect width calculation */
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.theme-toggle-btn {
+  appearance: none;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--neu-bg);
+  box-shadow: var(--shadow-flat);
+  transition: transform 0.2s, box-shadow 0.2s;
+  color: var(--text-primary);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+  box-shadow: var(--shadow-pressed);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 10px;
+  /* Internal padding for shadows */
+  margin: 0 -10px;
+  /* Negative margin to offset padding visually while keeping shadows safe */
+  width: calc(100% + 20px);
+}
+
+/* Mobile First: 2 columns is fine for modern mobile, but on very small screens, 1 might be better.
+   However, user requested "Mobile Browser Touch Gesture Responsive". 
+   2x2 grid is standard for dashboard on phones. */
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  /* Square cards */
+  text-align: center;
+  cursor: pointer;
+  padding: 20px;
+}
+
+.icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+
+  /* Neumorphic Pressed look for Icon Container */
+  background: var(--neu-bg);
+  box-shadow: var(--shadow-pressed);
+
+  /* Solid Dark 3D Stroke */
+  border: 1px solid var(--neu-border-color);
+
+  color: var(--accent-primary);
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover .icon-circle {
+  transform: scale(1.1);
+  /* Pop it out on hover */
+  box-shadow: var(--shadow-flat);
+}
+
+.dashboard-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+@media (min-width: 600px) {
+  .dashboard-grid {
+    gap: 30px;
+  }
+}

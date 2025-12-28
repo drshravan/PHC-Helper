@@ -1,34 +1,50 @@
 // ✅ Core styles
 import './App.css'
 
-// ✅ React Router (HashRouter is best for GitHub Pages)
+// ✅ React Router
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 
+// ✅ Theme Context
+import { ThemeProvider } from './context/ThemeContext'
+
 // ✅ Page components
-import HomePage from './pages/home/HomePage'
-import Dogbite from './pages/dogbite/Dogbite'
-import Eddlist from './pages/anc/edd/EDDList'
-import PHCData from './pages/phcdata/PHCData'
-import TestPage from './pages/testpage/testpage'
-import AncDetails from './pages/anc/AncDetails'
-import PregnancyCalculator from './pages/Pregnancy_Calculator/PregnancyCalculator'
-import NCD from './pages/ncd/NCD'   // ✅ ADD THIS
+import Home from './pages/Home'
+import ServicesList from './pages/services/ServicesList'
+import Dogbite from './pages/services/dogbite/Dogbite'
+import PregnancyCalculator from './pages/services/Pregnancy_Calculator/PregnancyCalculator'
+import PublicHolidays from './pages/services/public_holidays/PublicHolidays'
+
+import ProgramsList from './pages/programs/ProgramsList'
+import MCH from './pages/programs/mch/MCH'
+import AncRegistration from './pages/programs/mch/AncRegistration'
+import EddVsDeliveries from './pages/programs/mch/EddVsDeliveries'
+import NCD from './pages/programs/ncd/NCD'
+import Communicable from './pages/programs/communicable/Communicable'
 
 // ✅ Main App component
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/ncd" element={<NCD />} />
-        <Route path="/dogbite" element={<Dogbite />} />
-        <Route path="/eddlist" element={<Eddlist />} />
-        <Route path="/phcdata" element={<PHCData />} />
-        <Route path="/pregnancy-calculator" element={<PregnancyCalculator />} />
-        <Route path="/anc/:id" element={<AncDetails />} />
-        <Route path="/testpage/*" element={<TestPage />} />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+
+          {/* Services */}
+          <Route path="/services" element={<ServicesList />} />
+          <Route path="/services/dogbite" element={<Dogbite />} />
+          <Route path="/services/pregnancy-calculator" element={<PregnancyCalculator />} />
+          <Route path="/services/public-holidays" element={<PublicHolidays />} />
+
+          {/* Programs */}
+          <Route path="/programs" element={<ProgramsList />} />
+          <Route path="/programs/mch" element={<MCH />} />
+          <Route path="/programs/mch/anc" element={<AncRegistration />} />
+          <Route path="/programs/mch/edd-vs-deliveries" element={<EddVsDeliveries />} />
+          <Route path="/programs/ncd" element={<NCD />} />
+          <Route path="/programs/communicable" element={<Communicable />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   )
 }
 

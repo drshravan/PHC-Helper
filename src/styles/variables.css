@@ -1,0 +1,126 @@
+/* === ULTIMATE 3D NEUMORPHISM VARS === */
+:root {
+    /* --- FONTS & SIZES (SHARED) --- */
+    --font-heading: 'Inter', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+
+    --radius-sm: 12px;
+    --radius-md: 20px;
+    --radius-lg: 30px;
+    --input-height: 54px;
+
+    /* --- LIGHT THEME (DEFAULT) --- */
+    /* "Tactile Cloud" */
+    --neu-bg: #e0e5ec;
+    --card-bg: #e0e5ec;
+    /* Alias for card backgrounds */
+
+    /* Borders */
+    --neu-border-color: #ffffff;
+    /* White highlight for light mode crispness */
+
+    /* Shadows - Soft & Airy */
+    --shadow-flat:
+        9px 9px 16px rgb(163, 177, 198, 0.6),
+        -9px -9px 16px rgba(255, 255, 255, 0.5);
+
+    --shadow-pressed:
+        inset 6px 6px 10px rgb(163, 177, 198, 0.7),
+        inset -6px -6px 10px rgba(255, 255, 255, 0.8);
+
+    --shadow-floating:
+        14px 14px 28px rgb(163, 177, 198, 0.6),
+        -14px -14px 28px rgba(255, 255, 255, 0.8);
+
+    --shadow-soft:
+        5px 5px 10px #babecc,
+        -5px -5px 10px #ffffff;
+
+    /* Text - High Contrast */
+    --text-primary: #2d3436;
+    --text-secondary: #636e72;
+    --text-muted: #a4b0be;
+    --text-main: #2d3436;
+    /* Alias */
+
+    /* Accents */
+    --accent-primary: #3182ce;
+    /* Solid Blue */
+    --accent-secondary: #5a67d8;
+    --accent-glow: #3182ce;
+
+    --success-color: #00c853;
+    --error-color: #d50000;
+}
+
+/* === DARK THEME OVERRIDES (System Preference & Manual Class) === */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* "Tactile Charcoal" */
+        --neu-bg: #292d32;
+        --card-bg: #292d32;
+
+        /* Borders - Dark 3D Stroke */
+        --neu-border-color: #1a1c20;
+
+        /* Shadows - Deep & Moody */
+        --shadow-flat: 8px 8px 16px #1e2024, -8px -8px 16px #3e444b;
+        --shadow-pressed: inset 6px 6px 12px #1e2024, inset -6px -6px 12px #3e444b;
+        --shadow-floating: 12px 12px 24px #1a1c20, -12px -12px 24px #383e44;
+        --shadow-soft: 5px 5px 10px #1e2024, -5px -5px 10px #3e444b;
+
+        /* Text */
+        --text-primary: #ffffff;
+        --text-secondary: #b0b8c4;
+        --text-muted: #676f7a;
+        --text-main: #ffffff;
+
+        /* Accents - Neon */
+        --accent-primary: #00e5ff;
+        --accent-secondary: #2979ff;
+        --accent-glow: #00e5ff;
+
+        --success-color: #00e676;
+        --error-color: #ff1744;
+    }
+}
+
+/* Manual Dark Mode Override */
+html.dark-mode {
+    --neu-bg: #292d32;
+    --card-bg: #292d32;
+    --neu-border-color: #1a1c20;
+    --shadow-flat: 8px 8px 16px #1e2024, -8px -8px 16px #3e444b;
+    --shadow-pressed: inset 6px 6px 12px #1e2024, inset -6px -6px 12px #3e444b;
+    --shadow-floating: 12px 12px 24px #1a1c20, -12px -12px 24px #383e44;
+    --shadow-soft: 5px 5px 10px #1e2024, -5px -5px 10px #3e444b;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b8c4;
+    --text-muted: #676f7a;
+    --text-main: #ffffff;
+    --accent-primary: #00e5ff;
+    --accent-secondary: #2979ff;
+    --accent-glow: #00e5ff;
+    --success-color: #00e676;
+    --error-color: #ff1744;
+}
+
+/* Manual Light Mode Override */
+html.light-mode {
+    --neu-bg: #e0e5ec;
+    --card-bg: #e0e5ec;
+    --neu-border-color: #ffffff;
+    --shadow-flat: 9px 9px 16px rgb(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+    --shadow-pressed: inset 6px 6px 10px rgb(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.8);
+    --shadow-floating: 14px 14px 28px rgb(163, 177, 198, 0.6), -14px -14px 28px rgba(255, 255, 255, 0.8);
+    --shadow-soft: 5px 5px 10px #babecc, -5px -5px 10px #ffffff;
+    --text-primary: #2d3436;
+    --text-secondary: #636e72;
+    --text-muted: #a4b0be;
+    --text-main: #2d3436;
+    --accent-primary: #3182ce;
+    --accent-secondary: #5a67d8;
+    --accent-glow: #3182ce;
+    --success-color: #00c853;
+    --error-color: #d50000;
+}

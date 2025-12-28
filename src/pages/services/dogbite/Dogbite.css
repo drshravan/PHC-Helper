@@ -1,0 +1,150 @@
+/* === DOGBITE TRENDY UI === */
+
+.dog-bite-container {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.db-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 15px;
+}
+
+.date-picker-card {
+    background: var(--neu-bg);
+    box-shadow: var(--shadow-flat);
+    border: 1px solid var(--neu-border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 40px;
+}
+
+/* Timeline Layout */
+.schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    /* Gap handled by padding/margins for connector */
+    position: relative;
+    padding-left: 10px;
+}
+
+.schedule-item {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    align-items: center;
+    gap: 15px;
+    padding: 0 0 30px 0;
+    position: relative;
+}
+
+/* Connector Line */
+.timeline-connector {
+    position: absolute;
+    left: 29px;
+    /* Centered with badge (60px col -> center at 30? badge is 44 wide) */
+    top: 44px;
+    /* Start below badge */
+    bottom: -10px;
+    width: 2px;
+    background: var(--neu-border-color);
+    z-index: 0;
+}
+
+/* --- Badge --- */
+.dose-number-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    background: var(--neu-bg);
+    box-shadow: var(--shadow-flat);
+    /* Floating look */
+    border: 4px solid var(--neu-bg);
+    /* Mask connector */
+    color: var(--text-muted);
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Info --- */
+.dose-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.dose-title {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.dose-date {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.dose-weekday {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+/* === STATES === */
+
+/* ACTIVE (Today) */
+.active-dose .dose-number-badge {
+    background: var(--accent-primary);
+    color: #000;
+    box-shadow: 0 0 20px var(--accent-primary);
+    border-color: var(--neu-bg);
+}
+
+.active-dose .dose-date {
+    color: var(--accent-primary);
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+.active-dose .timeline-connector {
+    background: linear-gradient(to bottom, var(--accent-primary), var(--neu-border-color));
+}
+
+/* PAST (Completed) */
+.past-dose .dose-number-badge {
+    background: var(--neu-bg);
+    color: var(--success-color);
+    /* Green check */
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
+    /* Sunken/Pressed */
+}
+
+.past-dose .timeline-connector {
+    background: var(--success-color);
+}
+
+.past-dose .dose-date {
+    opacity: 0.7;
+    text-decoration: line-through;
+}
+
+/* FUTURE */
+.future-dose .dose-number-badge {
+    background: var(--neu-bg);
+    border: 2px solid var(--neu-border-color);
+    box-shadow: none;
+    color: var(--text-secondary);
+}

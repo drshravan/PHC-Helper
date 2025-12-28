@@ -1,0 +1,93 @@
+/* === NEUMORPHIC UTILITIES === */
+
+/* The Core Card (Convex) */
+.neu-card {
+    background: var(--neu-bg);
+    box-shadow: var(--shadow-flat);
+    border-radius: var(--radius-md);
+
+    /* Solid Dark 3D Stroke */
+    border: 1px solid var(--neu-border-color);
+
+    /* Keeps layout consistent */
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+}
+
+/* Hover Lift Effect */
+.neu-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-floating);
+}
+
+/* Neumorphic Button */
+.neu-btn {
+    appearance: none;
+    background: var(--neu-bg);
+    box-shadow: var(--shadow-flat);
+    color: var(--text-primary);
+
+    /* Solid Dark 3D Stroke */
+    border: 1px solid var(--neu-border-color);
+
+    border-radius: var(--radius-sm);
+
+    padding: 0 24px;
+    height: 48px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    touch-action: manipulation;
+}
+
+.neu-btn:active {
+    box-shadow: var(--shadow-pressed);
+    transform: scale(0.98);
+}
+
+.neu-btn-primary {
+    color: var(--accent-primary);
+}
+
+/* Neumorphic Input (Concave) */
+.neu-input {
+    width: 100%;
+    height: var(--input-height);
+    background: var(--neu-bg);
+
+    /* Solid Dark 3D Stroke */
+    border: 1px solid var(--neu-border-color);
+
+    border-radius: var(--radius-sm);
+    padding: 0 20px;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 16px;
+
+    /* The "Pressed" Look */
+    box-shadow: var(--shadow-pressed);
+
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.neu-input:focus {
+    box-shadow: var(--shadow-pressed), 0 0 0 2px var(--accent-primary);
+}
+
+/* Utility for icons/badges to look pressed */
+.neu-icon-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neu-bg);
+    box-shadow: var(--shadow-flat);
+    color: var(--accent-primary);
+}
