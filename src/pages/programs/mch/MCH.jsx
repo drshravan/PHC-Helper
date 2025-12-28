@@ -30,6 +30,28 @@ const MCH = () => {
                     </div>
                     <h3>EDD vs Deliveries</h3>
                 </GlassCard>
+
+                <GlassCard className="dashboard-card animate-pop delay-300" onClick={() => navigate('/programs/mch/maternal-death-audit')} hoverEffect={true}>
+                    <div className="icon-circle" style={{ color: '#f44336' }}>
+                        <MaterialIcon name="medical_services" size={32} />
+                    </div>
+                    {/* Allow text wrap */}
+                    <h3 style={{ whiteSpace: 'normal' }}>Maternal Death Audit</h3>
+                </GlassCard>
+
+                <GlassCard className="dashboard-card animate-pop delay-400" onClick={() => navigate('/programs/mch/child-death-audit')} hoverEffect={true}>
+                    <div className="icon-circle" style={{ color: '#ff9800' }}>
+                        <MaterialIcon name="baby_changing_station" size={32} />
+                    </div>
+                    <h3 style={{ whiteSpace: 'normal' }}>Child Death Audit</h3>
+                </GlassCard>
+
+                <GlassCard className="dashboard-card animate-pop delay-500" onClick={() => navigate('/programs/mch/aefi-audit')} hoverEffect={true}>
+                    <div className="icon-circle" style={{ color: '#90a4ae' }}>
+                        <MaterialIcon name="vaccines" size={32} />
+                    </div>
+                    <h3 style={{ whiteSpace: 'normal' }}>AEFI Audit</h3>
+                </GlassCard>
             </div>
         </div>
     );

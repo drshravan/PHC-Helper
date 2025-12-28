@@ -18,8 +18,17 @@ import ProgramsList from './pages/programs/ProgramsList'
 import MCH from './pages/programs/mch/MCH'
 import AncRegistration from './pages/programs/mch/AncRegistration'
 import EddVsDeliveries from './pages/programs/mch/EddVsDeliveries'
+import MaternalDeathAudit from './pages/programs/mch/MaternalDeathAudit'
+import ChildDeathAudit from './pages/programs/mch/ChildDeathAudit'
+import AefiAudit from './pages/programs/mch/AefiAudit'
 import NCD from './pages/programs/ncd/NCD'
 import Communicable from './pages/programs/communicable/Communicable'
+import TbActiveCases from './pages/programs/communicable/TbActiveCases'
+import TbTreatmentCompleted from './pages/programs/communicable/TbTreatmentCompleted'
+import TbDeathCases from './pages/programs/communicable/TbDeathCases'
+import LeprosySuspected from './pages/programs/communicable/LeprosySuspected'
+import LeprosyPositive from './pages/programs/communicable/LeprosyPositive'
+import LeprosyDeath from './pages/programs/communicable/LeprosyDeath'
 
 // ✅ Main App component
 function App() {
@@ -40,8 +49,17 @@ function App() {
           <Route path="/programs/mch" element={<MCH />} />
           <Route path="/programs/mch/anc" element={<AncRegistration />} />
           <Route path="/programs/mch/edd-vs-deliveries" element={<EddVsDeliveries />} />
+          <Route path="/programs/mch/maternal-death-audit" element={<MaternalDeathAudit />} />
+          <Route path="/programs/mch/child-death-audit" element={<ChildDeathAudit />} />
+          <Route path="/programs/mch/aefi-audit" element={<AefiAudit />} />
           <Route path="/programs/ncd" element={<NCD />} />
           <Route path="/programs/communicable" element={<Communicable />} />
+          <Route path="/programs/communicable/tb-active" element={<TbActiveCases />} />
+          <Route path="/programs/communicable/tb-completed" element={<TbTreatmentCompleted />} />
+          <Route path="/programs/communicable/tb-death" element={<TbDeathCases />} />
+          <Route path="/programs/communicable/leprosy-suspected" element={<LeprosySuspected />} />
+          <Route path="/programs/communicable/leprosy-positive" element={<LeprosyPositive />} />
+          <Route path="/programs/communicable/leprosy-death" element={<LeprosyDeath />} />
         </Routes>
       </Router>
     </ThemeProvider>
