@@ -14,7 +14,11 @@ const PREGNANCY_SCHEDULE = [
     { range: [37, 42], stage: "Full Term", scans: ["Biophysical Profile (BPP) (if overdue)"], tests: ["Group B Strep (35-37 weeks)"], advice: "Weekly checkups. Watch for labor signs." }
 ];
 
-const DateInput = ({ date, setDate, field, label, handleDateChange }) => (
+const getDaysInMonth = (month, year) => {
+    return new Date(year, month, 0).getDate();
+};
+
+const DateInput = ({ date, setDate, field, label, max, min = 1, handleDateChange }) => (
     <div className={`date-field-wrapper ${field === 'year' ? 'year-field' : ''} `}>
         <label className="field-label">{label}</label>
         <div className="date-input-group">
@@ -22,7 +26,24 @@ const DateInput = ({ date, setDate, field, label, handleDateChange }) => (
             <input
                 type="number"
                 value={date[field]}
-                onChange={(e) => setDate({ ...date, [field]: parseInt(e.target.value) || 0 })}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                    let val = parseInt(e.target.value);
+                    if (isNaN(val)) val = 0; // Allow typing to clear, handled via state usually or clamp on blur. 
+                    // Better UX: Allow partial typing but clamp max.
+                    if (val > max) val = max;
+                    // Dont strictly clamp min while typing or backspace becomes impossible. 
+                    // But for setDate state we usually want valid numbers. 
+                    // We'll let the parent handler deal with it or just pass raw.
+                    setDate(field, val);
+                }}
+                onBlur={(e) => {
+                    // Clamp on blur
+                    let val = parseInt(e.target.value) || min;
+                    if (val < min) val = min;
+                    if (val > max) val = max;
+                    setDate(field, val);
+                }}
                 className="date-box"
                 placeholder={label}
             />
@@ -44,9 +65,25 @@ const PregnancyCalculator = () => {
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
 
+    // --- Validation & Clamping Logic ---
+    // Ensure day is valid whenever month/year changes
+    useEffect(() => {
+        const maxDaysLmp = getDaysInMonth(lmpDate.month, lmpDate.year);
+        if (lmpDate.day > maxDaysLmp) {
+            setLmpDate(prev => ({ ...prev, day: maxDaysLmp }));
+        }
+
+        const maxDaysTill = getDaysInMonth(tillDate.month, tillDate.year);
+        if (tillDate.day > maxDaysTill) {
+            setTillDate(prev => ({ ...prev, day: maxDaysTill }));
+        }
+    }, [lmpDate.month, lmpDate.year, tillDate.month, tillDate.year]);
+
+
     const getDateObj = (d) => new Date(d.year, d.month - 1, d.day);
     const formatDate = (dateObj) => dateObj.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
 
+    // Arrow Button Logic (Keeps rollover for ease of use)
     const handleDateChange = (type, field, amount) => {
         const setDate = type === 'lmp' ? setLmpDate : setTillDate;
         setDate(prev => {
@@ -56,6 +93,22 @@ const PregnancyCalculator = () => {
             if (field === 'year') newDate.setFullYear(newDate.getFullYear() + amount);
             return { day: newDate.getDate(), month: newDate.getMonth() + 1, year: newDate.getFullYear() };
         });
+    };
+
+    // Direct Input Change (Strict)
+    const handleInputChange = (type, field, value) => {
+        const setDate = type === 'lmp' ? setLmpDate : setTillDate;
+        const current = type === 'lmp' ? lmpDate : tillDate;
+
+        let newData = { ...current, [field]: value };
+
+        // Dynamic Max Days check for Day input
+        if (field === 'day') {
+            const maxDays = getDaysInMonth(newData.month, newData.year);
+            if (value > maxDays) newData.day = maxDays;
+        }
+
+        setDate(newData);
     };
 
     useEffect(() => {
@@ -118,9 +171,24 @@ const PregnancyCalculator = () => {
                             <label>LMP Date</label>
                         </div>
                         <div className="inputs-row">
-                            <DateInput date={lmpDate} setDate={setLmpDate} field="day" label="Day" handleDateChange={(field, amount) => handleDateChange('lmp', field, amount)} />
-                            <DateInput date={lmpDate} setDate={setLmpDate} field="month" label="Month" handleDateChange={(field, amount) => handleDateChange('lmp', field, amount)} />
-                            <DateInput date={lmpDate} setDate={setLmpDate} field="year" label="Year" handleDateChange={(field, amount) => handleDateChange('lmp', field, amount)} />
+                            <DateInput
+                                date={lmpDate}
+                                setDate={(f, v) => handleInputChange('lmp', f, v)}
+                                field="day" label="Day" max={getDaysInMonth(lmpDate.month, lmpDate.year)}
+                                handleDateChange={(f, a) => handleDateChange('lmp', f, a)}
+                            />
+                            <DateInput
+                                date={lmpDate}
+                                setDate={(f, v) => handleInputChange('lmp', f, v)}
+                                field="month" label="Month" max={12}
+                                handleDateChange={(f, a) => handleDateChange('lmp', f, a)}
+                            />
+                            <DateInput
+                                date={lmpDate}
+                                setDate={(f, v) => handleInputChange('lmp', f, v)}
+                                field="year" label="Year" max={2100} min={1900}
+                                handleDateChange={(f, a) => handleDateChange('lmp', f, a)}
+                            />
                         </div>
                     </div>
 
@@ -130,9 +198,24 @@ const PregnancyCalculator = () => {
                             <span className="refresh-icon" onClick={() => setTillDate(getToday())} title="Reset to Today"><MaterialIcon name="refresh" size={24} /></span>
                         </div>
                         <div className="inputs-row">
-                            <DateInput date={tillDate} setDate={setTillDate} field="day" label="Day" handleDateChange={(field, amount) => handleDateChange('till', field, amount)} />
-                            <DateInput date={tillDate} setDate={setTillDate} field="month" label="Month" handleDateChange={(field, amount) => handleDateChange('till', field, amount)} />
-                            <DateInput date={tillDate} setDate={setTillDate} field="year" label="Year" handleDateChange={(field, amount) => handleDateChange('till', field, amount)} />
+                            <DateInput
+                                date={tillDate}
+                                setDate={(f, v) => handleInputChange('till', f, v)}
+                                field="day" label="Day" max={getDaysInMonth(tillDate.month, tillDate.year)}
+                                handleDateChange={(f, a) => handleDateChange('till', f, a)}
+                            />
+                            <DateInput
+                                date={tillDate}
+                                setDate={(f, v) => handleInputChange('till', f, v)}
+                                field="month" label="Month" max={12}
+                                handleDateChange={(f, a) => handleDateChange('till', f, a)}
+                            />
+                            <DateInput
+                                date={tillDate}
+                                setDate={(f, v) => handleInputChange('till', f, v)}
+                                field="year" label="Year" max={2100} min={1900}
+                                handleDateChange={(f, a) => handleDateChange('till', f, a)}
+                            />
                         </div>
                     </div>
 
