@@ -211,7 +211,8 @@ html.light-mode .arrow-button {
 /* === RESULT SECTION (Glass) === */
 .result-section {
   text-align: center;
-  padding: 30px;
+  padding: 20px 10px;
+  /* Reduced vertical & horizontal padding for better fit */
   background: var(--pc-card-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -219,10 +220,15 @@ html.light-mode .arrow-button {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--pc-card-border);
   margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .main-weeks {
-  font-size: 2.5rem;
+  font-size: 1.7rem;
+  /* Reduced to fit mobile screens */
   font-weight: 800;
   margin: 0;
   background: linear-gradient(135deg, var(--pc-accent), #4facfe);
@@ -230,6 +236,9 @@ html.light-mode .arrow-button {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 15px rgba(0, 255, 195, 0.3));
+  white-space: nowrap;
+  /* Strictly force one line */
+  line-height: 1.2;
 }
 
 .sub-info {
