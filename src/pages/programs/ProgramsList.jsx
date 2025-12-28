@@ -37,7 +37,8 @@ const ProgramsList = () => {
                     <div className="icon-circle" style={{ color: '#ff9800' }}>
                         <MaterialIcon name="health_and_safety" size={32} />
                     </div>
-                    <h3>Communicable</h3>
+                    {/* Updated Title */}
+                    <h3>Communicable Diseases</h3>
                     <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '5px' }}>Diseases & Vectors</p>
                 </GlassCard>
             </div>

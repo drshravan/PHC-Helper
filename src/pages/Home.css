@@ -1,26 +1,30 @@
+/* === HOME DASHBOARD LAYOUT === */
+
 .home-wrapper {
-  padding: 20px;
-  padding-right: 24px;
-  /* Slightly more padding on right to prevent shadow crop */
-  padding-top: 40px;
+  padding: 16px;
+  /* Optimized symmetric padding for mobile */
+  padding-top: 30px;
   max-width: 800px;
   margin: 0 auto;
+  width: 100%;
   box-sizing: border-box;
-  /* Ensure padding doesn't affect width calculation */
 }
 
 .home-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
+  padding: 0 4px;
+  /* Align visual text with grid */
 }
 
+/* === THEME TOGGLE BUTTON === */
 .theme-toggle-btn {
   appearance: none;
   border: none;
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -37,20 +41,19 @@
   box-shadow: var(--shadow-pressed);
 }
 
+/* === DASHBOARD GRID (Symmetric Mobile) === */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  padding: 10px;
-  /* Internal padding for shadows */
-  margin: 0 -10px;
-  /* Negative margin to offset padding visually while keeping shadows safe */
-  width: calc(100% + 20px);
+  /* 2 Columns */
+  gap: 18px;
+  /* Tighter gap to prevent overflow */
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  /* Safe padding for shadows */
+  /* No negative margins - ensures 100% fit */
 }
-
-/* Mobile First: 2 columns is fine for modern mobile, but on very small screens, 1 might be better.
-   However, user requested "Mobile Browser Touch Gesture Responsive". 
-   2x2 grid is standard for dashboard on phones. */
 
 .dashboard-card {
   display: flex;
@@ -61,45 +64,98 @@
   /* Square cards */
   text-align: center;
   cursor: pointer;
-  padding: 20px;
+  padding: 16px;
+  border-radius: 20px;
+
+  /* Neumorphic Flat Card Base */
+  background: var(--neu-bg);
+  box-shadow: var(--shadow-flat);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  /* Safety for small screens */
+  min-width: 0;
+  overflow: hidden;
 }
 
+.dashboard-card:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-pressed);
+}
+
+/* Icon Circle */
 .icon-circle {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 
-  /* Neumorphic Pressed look for Icon Container */
+  /* Pressed Circle for Icon */
   background: var(--neu-bg);
   box-shadow: var(--shadow-pressed);
-
-  /* Solid Dark 3D Stroke */
   border: 1px solid var(--neu-border-color);
-
   color: var(--accent-primary);
 
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .dashboard-card:hover .icon-circle {
   transform: scale(1.1);
-  /* Pop it out on hover */
-  box-shadow: var(--shadow-flat);
+  color: var(--accent-secondary);
 }
 
 .dashboard-card h3 {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   margin: 0;
   color: var(--text-primary);
+  line-height: 1.3;
+  width: 100%;
+
+  /* Text Wrapping Enabled */
+  white-space: normal;
+  overflow: visible;
+  text-align: center;
 }
 
+.dashboard-card p {
+  /* Muted text styles usually passed via props/classes */
+  font-size: 0.75rem !important;
+  line-height: 1.2;
+  margin-top: 4px;
+
+  /* Allow wrapping but prevent overflow */
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+/* Tablet/Desktop Adjustments */
 @media (min-width: 600px) {
+  .home-wrapper {
+    padding: 30px;
+  }
+
   .dashboard-grid {
-    gap: 30px;
+    gap: 24px;
+    padding: 20px;
+  }
+
+  .dashboard-card {
+    padding: 24px;
+  }
+
+  .dashboard-card h3 {
+    font-size: 1.1rem;
+    white-space: normal;
+    /* Allow wrapping on larger screens */
+  }
+
+  .icon-circle {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
   }
 }
