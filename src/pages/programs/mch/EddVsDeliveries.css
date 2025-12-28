@@ -1,4 +1,25 @@
-/* === EDD vs Deliveries Card Styles === */
+/* === STICKY APP BAR (PageHeader) === */
+.edd-container .page-header {
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    background: rgba(26, 26, 26, 0.85);
+    /* Semi-transparent dark bg */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    margin: -20px -20px 20px -20px;
+    /* Negate wrapper padding to touch edges */
+    padding: 15px 20px;
+    /* Re-add internal padding */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Light mode override for header */
+html.light-mode .edd-container .page-header {
+    background: rgba(224, 229, 236, 0.85);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
 
 /* Ensure wrapper fills height for tabs */
 .edd-container {
@@ -52,6 +73,7 @@
     /* Spacing: Top/Sides 10px, Bottom 20px for clear separation */
     margin: 10px 10px 20px 10px;
     background: var(--pc-card-glass);
+    /* Reusing glass var if available, else fallback */
     border: 1px solid var(--pc-border);
     border-radius: 16px;
 }
