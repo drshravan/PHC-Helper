@@ -1,0 +1,191 @@
+/* === SC ANC LIST STYLES === */
+
+.sc-list-wrapper {
+    padding-bottom: 20px;
+}
+
+/* --- STATS FILTER BAR --- */
+.stats-filter-bar {
+    display: flex;
+    justify-content: space-between;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 12px 10px;
+    margin-bottom: 20px;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    cursor: pointer;
+    position: relative;
+    padding: 8px 4px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.filter-item.active {
+    background: rgba(255, 193, 7, 0.15);
+    /* Low opacity amber */
+    border: 1px solid #ffc107;
+}
+
+.filter-val {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #fff;
+}
+
+.filter-item.active .filter-val {
+    color: #ffc107;
+}
+
+.filter-lbl {
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.filter-item.active .filter-lbl {
+    color: #ddd;
+    font-weight: 600;
+}
+
+/* --- BENEFICIARY CARD --- */
+.benef-card {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.benef-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.benef-info-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.benef-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffc107;
+    /* Amber icon */
+}
+
+.benef-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.benef-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.benef-meta {
+    font-size: 0.8rem;
+    color: #bbb;
+}
+
+.call-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    /* Circle */
+    background: rgba(76, 175, 80, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4caf50;
+    /* Green */
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.call-icon-btn:active {
+    background: rgba(76, 175, 80, 0.3);
+}
+
+/* Divider */
+.card-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 12px 0;
+}
+
+/* ASHA Row */
+.asha-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.asha-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.asha-lbl {
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.asha-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ddd;
+}
+
+.asha-call-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 6px 12px;
+    border-radius: 8px;
+    color: #26a69a;
+    /* Tealish Green */
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Warning Box */
+.warning-box {
+    background: rgba(244, 67, 54, 0.1);
+    /* Low opacity red */
+    border: 1px solid rgba(244, 67, 54, 0.2);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.warning-text {
+    color: #ef5350;
+    font-size: 0.8rem;
+    font-weight: 500;
+}

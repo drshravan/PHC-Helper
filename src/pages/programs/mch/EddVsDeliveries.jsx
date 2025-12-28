@@ -49,7 +49,12 @@ const EddVsDeliveries = () => {
     const renderDashboardTab = () => (
         <div className="edds-list animate-enter">
             {monthsData.map((data, index) => (
-                <GlassCard key={index} className="month-card modern-card">
+                <GlassCard
+                    key={index}
+                    className="month-card modern-card"
+                    onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${data.month.toLowerCase().substring(0, 3)}-${data.year}`)}
+                    hoverEffect={true}
+                >
                     {/* Header */}
                     <div className="month-header-modern">
                         <div>
@@ -127,30 +132,182 @@ const EddVsDeliveries = () => {
         </div>
     );
 
-    const renderImportScreen = () => (
-        <div className="import-container animate-enter">
-            <h3 className="import-title">Import Data</h3>
-            <div className="import-card">
-                <div className="import-steps">
-                    <strong>1.</strong> Copy rows from your Excel sheet (including headers).<br />
-                    <strong>2.</strong> Paste them below.
+    // --- Import & Upload State ---
+    const [importText, setImportText] = useState('');
+    const [parsedData, setParsedData] = useState([]);
+    const [previewMode, setPreviewMode] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState(null); // 'success' | 'error'
+
+    // --- Parsing Logic ---
+    const handlePreview = () => {
+        if (!importText.trim()) return;
+
+        const lines = importText.split('\n').filter(line => line.trim() !== '');
+
+        // Find Header Row (Metadata might be present at top)
+        let headerIndex = -1;
+        const requiredHeaders = ["S.No", "MotherId", "District", "Phc", "SubCenter", "Mother Name", "Mobile", "EDD Date"];
+
+        for (let i = 0; i < lines.length; i++) {
+            // Excel copy-paste uses tabs. We split by tab.
+            const row = lines[i].split('\t').map(cell => cell.trim());
+
+            // Check if this row contains all required headers
+            const hasAllHeaders = requiredHeaders.every(h => row.includes(h));
+            if (hasAllHeaders) {
+                headerIndex = i;
+                break;
+            }
+        }
+
+        if (headerIndex === -1) {
+            alert("Invalid Format! Could not find the required table headers: " + requiredHeaders.join(", "));
+            return;
+        }
+
+        // Map Headers to indices
+        const headers = lines[headerIndex].split('\t').map(h => h.trim());
+        const headerMap = {};
+        requiredHeaders.forEach(req => {
+            headerMap[req] = headers.indexOf(req);
+        });
+
+        // Parse Rows
+        const data = [];
+        for (let i = headerIndex + 1; i < lines.length; i++) {
+            const row = lines[i].split('\t').map(cell => cell.trim());
+            // Skip invalid/empty rows
+            if (row.length < requiredHeaders.length) continue;
+
+            // Construct Object
+            const obj = {
+                sNo: row[headerMap["S.No"]],
+                motherId: row[headerMap["MotherId"]],
+                district: row[headerMap["District"]],
+                phc: row[headerMap["Phc"]],
+                subCenter: row[headerMap["SubCenter"]],
+                motherName: row[headerMap["Mother Name"]],
+                mobile: row[headerMap["Mobile"]],
+                eddDate: row[headerMap["EDD Date"]],
+                status: 'Pending' // Default status
+            };
+            data.push(obj);
+        }
+
+        if (data.length === 0) {
+            alert("No valid data rows found after the header.");
+            return;
+        }
+
+        setParsedData(data);
+        setPreviewMode(true);
+    };
+
+    const handleUpload = async () => {
+        setUploading(true);
+        // Here we would normally import { db } from '../../../firebase' and addDoc
+        // Since I cannot modify external files safely in this step, I will mock the alert or you can uncomment below.
+
+        try {
+            // Dynamically import to avoid build errors if file missing
+            const { db } = await import('../../../firebase');
+            const { collection, addDoc } = await import('firebase/firestore');
+
+            const batchPromises = parsedData.map(item => {
+                return addDoc(collection(db, "edd_entries"), {
+                    ...item,
+                    createdAt: new Date()
+                });
+            });
+
+            await Promise.all(batchPromises);
+
+            setUploadStatus('success');
+            setParsedData([]);
+            setImportText('');
+            setPreviewMode(false);
+            setTimeout(() => setUploadStatus(null), 3000);
+            alert("Successfully uploaded " + parsedData.length + " records to Firebase!");
+
+        } catch (error) {
+            console.error("Upload Error:", error);
+            alert("Upload Failed: " + error.message);
+            setUploadStatus('error');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const renderImportScreen = () => {
+        if (previewMode) {
+            return (
+                <div className="import-container animate-enter">
+                    <h3 className="import-title">Preview Data ({parsedData.length} records)</h3>
+                    <div className="table-responsive" style={{ overflowX: 'auto', maxHeight: '50vh', border: '1px solid var(--neu-border-color)', borderRadius: '12px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: '0.8rem' }}>
+                            <thead style={{ background: 'var(--neu-bg)', position: 'sticky', top: 0 }}>
+                                <tr>
+                                    {["S.No", "ID", "Name", "Mobile", "EDD", "SubCenter"].map(h => (
+                                        <th key={h} style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid var(--neu-border-color)' }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {parsedData.map((row, idx) => (
+                                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <td style={{ padding: '8px' }}>{row.sNo}</td>
+                                        <td style={{ padding: '8px' }}>{row.motherId}</td>
+                                        <td style={{ padding: '8px', fontWeight: 'bold' }}>{row.motherName}</td>
+                                        <td style={{ padding: '8px' }}>{row.mobile}</td>
+                                        <td style={{ padding: '8px', color: 'var(--accent-primary)' }}>{row.eddDate}</td>
+                                        <td style={{ padding: '8px' }}>{row.subCenter}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                        <button className="neu-btn" onClick={() => setPreviewMode(false)} style={{ flex: 1, color: '#f44336' }}>
+                            Cancel
+                        </button>
+                        <button className="preview-btn" onClick={handleUpload} disabled={uploading}>
+                            {uploading ? 'Uploading...' : 'Confirm & Upload'}
+                            <MaterialIcon name="cloud_upload" size={20} />
+                        </button>
+                    </div>
                 </div>
+            );
+        }
 
-                <textarea
-                    className="import-textarea"
-                    placeholder="Paste Excel data here..."
-                    spellCheck="false"
-                ></textarea>
+        return (
+            <div className="import-container animate-enter">
+                <h3 className="import-title">Import Data</h3>
+                <div className="import-card">
+                    <div className="import-steps">
+                        <strong>1.</strong> Copy rows from your Excel sheet (including headers).<br />
+                        <strong>2.</strong> Paste them below.
+                    </div>
 
-                <div style={{ marginTop: '20px' }}>
-                    <button className="preview-btn">
-                        <MaterialIcon name="visibility" size={24} />
-                        Preview Data
-                    </button>
+                    <textarea
+                        className="import-textarea"
+                        placeholder="Paste Excel data here..."
+                        spellCheck="false"
+                        value={importText}
+                        onChange={(e) => setImportText(e.target.value)}
+                    ></textarea>
+
+                    <div style={{ marginTop: '20px' }}>
+                        <button className="preview-btn" onClick={handlePreview}>
+                            <MaterialIcon name="visibility" size={24} />
+                            Preview Data
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="home-wrapper edd-container">

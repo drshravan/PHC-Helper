@@ -1,0 +1,345 @@
+/* === PHC MONTHLY INPUT STYLES === */
+
+.phc-wrapper {
+    /* Padding bottom ensures content isn't hidden behind fixed tabs */
+    padding-bottom: 90px;
+    padding-top: 10px;
+}
+
+/* === STICKY HEADER (Inherits .page-header structure, adjusting specifically for this context if needed) === */
+.phc-wrapper .page-header {
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    background: rgba(30, 30, 30, 0.95);
+    /* Matches the dark theme of this page */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    margin: -20px -20px 20px -20px;
+    /* Negate wrapper padding to touch edges */
+    padding: 15px 20px;
+    /* Re-add internal padding */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure bottom tabs are fixed (reusing .edd-bottom-tabs logic but ensuring it applies here) */
+.edd-bottom-tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: #1e1e1e;
+    /* Match theme */
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    backdrop-filter: blur(10px);
+}
+
+/* === TOP SUMMARY CARD === */
+.summary-card-dark {
+    background: #1e1e1e;
+    /* Darker than standard glass for contrast */
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.summary-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.summary-title {
+    color: #4fc3f7;
+    /* Light Blue */
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary-total-large {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+/* Progress Bar */
+.progress-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #ffc107;
+    /* Amber/Yellow for Pending default */
+    border-radius: 4px;
+}
+
+/* 3-Col Stats Grid */
+.summary-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    text-align: center;
+}
+
+.summary-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.summary-val {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.summary-label {
+    font-size: 0.75rem;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot.pending {
+    background: #ffc107;
+}
+
+.dot.delivered {
+    background: #29b6f6;
+}
+
+/* Light Blue */
+.dot.aborted {
+    background: #ef5350;
+}
+
+/* Red */
+
+/* === SECTION HEADERS === */
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    margin-top: 24px;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.section-badge {
+    background: #263238;
+    color: #4fc3f7;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* === DARK CONTAINER CARDS === */
+.details-card-dark {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+/* Grid for "Govt/Pvt/Other" buttons */
+.stats-blocks-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.stats-block {
+    background: #2c2c2c;
+    border-radius: 12px;
+    padding: 16px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.stats-block-val {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+/* Colors for specific blocks based on context (handled via inline style or specific classes) */
+.val-teal {
+    color: #26a69a;
+}
+
+.val-orange {
+    color: #ffa726;
+}
+
+.val-blue {
+    color: #42a5f5;
+}
+
+.val-purple {
+    color: #ab47bc;
+}
+
+.val-red {
+    color: #ef5350;
+}
+
+.stats-block-lbl {
+    font-size: 0.65rem;
+    color: #aaa;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Segmented Control / Tabs inside Card */
+.segment-control {
+    display: flex;
+    background: #2c2c2c;
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 16px;
+}
+
+.segment-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.segment-btn.active {
+    background: #424242;
+    color: #4fc3f7;
+    /* Highlighting active tab */
+}
+
+/* Card Footer */
+.card-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer-lbl {
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.footer-val {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* === SUB-CENTERS LIST ITEMS === */
+.sc-card {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.sc-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.sc-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4fc3f7;
+    /* Matching the light blue from screenshot */
+}
+
+.sc-arrow {
+    color: #666;
+}
+
+.sc-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    text-align: center;
+}
+
+.sc-stat-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.sc-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.sc-lbl {
+    font-size: 0.65rem;
+    color: #888;
+}
+
+/* SubCenter Colors */
+.sc-c-blue {
+    color: #42a5f5;
+}
+
+.sc-c-yellow {
+    color: #ffca28;
+}
+
+.sc-c-green {
+    color: #66bb6a;
+}
+
+.sc-c-red {
+    color: #ef5350;
+}

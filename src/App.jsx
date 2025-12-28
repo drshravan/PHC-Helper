@@ -18,6 +18,9 @@ import ProgramsList from './pages/programs/ProgramsList'
 import MCH from './pages/programs/mch/MCH'
 import AncRegistration from './pages/programs/mch/AncRegistration'
 import EddVsDeliveries from './pages/programs/mch/EddVsDeliveries'
+import PhcMonthlyInput from './pages/programs/mch/PhcMonthlyInput'
+import ScAncList from './pages/programs/mch/ScAncList'
+import AncEditRecord from './pages/programs/mch/AncEditRecord'
 import MaternalDeathAudit from './pages/programs/mch/MaternalDeathAudit'
 import ChildDeathAudit from './pages/programs/mch/ChildDeathAudit'
 import AefiAudit from './pages/programs/mch/AefiAudit'
@@ -49,6 +52,9 @@ function App() {
           <Route path="/programs/mch" element={<MCH />} />
           <Route path="/programs/mch/anc" element={<AncRegistration />} />
           <Route path="/programs/mch/edd-vs-deliveries" element={<EddVsDeliveries />} />
+          <Route path="/programs/mch/edd-vs-deliveries/:monthId" element={<PhcMonthlyInput />} />
+          <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId" element={<ScAncList />} />
+          <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId/:recordId" element={<AncEditRecord />} />
           <Route path="/programs/mch/maternal-death-audit" element={<MaternalDeathAudit />} />
           <Route path="/programs/mch/child-death-audit" element={<ChildDeathAudit />} />
           <Route path="/programs/mch/aefi-audit" element={<AefiAudit />} />
