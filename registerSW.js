@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/PHC-Helper/sw.js', { scope: '/PHC-Helper/' })})}
