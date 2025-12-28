@@ -50,63 +50,52 @@ const EddVsDeliveries = () => {
         <div className="edds-list animate-enter">
             {monthsData.map((data, index) => (
                 <GlassCard key={index} className="month-card modern-card">
+                    {/* Header */}
                     <div className="month-header-modern">
                         <div>
                             <span className="month-name-large">{data.month}</span>
                             <span className="year-label">{data.year}</span>
                         </div>
                         <div className="total-badge-modern">
-                            <span className="badge-label">Total EDDs</span>
+                            <span className="badge-label">TOTAL EDDS</span>
                             <span className="badge-value">{data.total}</span>
                         </div>
                     </div>
 
-                    <div className="stats-section">
-                        <div className="section-label">Outcome</div>
-                        <div className="stats-grid-modern">
-                            <div className="stat-item">
-                                <span className="stat-icon normal"><MaterialIcon name="child_care" size={20} /></span>
-                                <div className="stat-text">
-                                    <span className="val">{data.stats.normal}</span>
-                                    <span className="lbl">Normal</span>
-                                </div>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-icon lscs"><MaterialIcon name="medical_services" size={20} /></span>
-                                <div className="stat-text">
-                                    <span className="val">{data.stats.lscs}</span>
-                                    <span className="lbl">LSCS</span>
-                                </div>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-icon abort"><MaterialIcon name="cancel" size={20} /></span>
-                                <div className="stat-text">
-                                    <span className="val">{data.stats.abortions}</span>
-                                    <span className="lbl">Abortions</span>
-                                </div>
-                            </div>
+                    {/* Outcome Row (Compact) */}
+                    <div className="section-label" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '8px' }}>OUTCOME</div>
+                    <div className="stats-compact-row">
+                        <div className="stat-pill">
+                            <div className="stat-pill-icon normal"><MaterialIcon name="child_care" size={18} /></div>
+                            <span className="stat-val">{data.stats.normal}</span>
+                            <span className="stat-lbl">Normal</span>
+                        </div>
+                        <div className="stat-pill">
+                            <div className="stat-pill-icon lscs"><MaterialIcon name="medical_services" size={18} /></div>
+                            <span className="stat-val">{data.stats.lscs}</span>
+                            <span className="stat-lbl">LSCS</span>
+                        </div>
+                        <div className="stat-pill">
+                            <div className="stat-pill-icon abort"><MaterialIcon name="cancel" size={18} /></div>
+                            <span className="stat-val">{data.stats.abortions}</span>
+                            <span className="stat-lbl">Abortions</span>
                         </div>
                     </div>
 
-                    <div className="divider"></div>
+                    <div className="section-divider"></div>
 
-                    <div className="stats-section">
-                        <div className="section-label">Facility</div>
-                        <div className="stats-grid-modern col-2">
-                            <div className="stat-item">
-                                <span className="stat-icon govt"><MaterialIcon name="account_balance" size={20} /></span>
-                                <div className="stat-text">
-                                    <span className="val">{data.stats.govt}</span>
-                                    <span className="lbl">Govt</span>
-                                </div>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-icon pvt"><MaterialIcon name="local_hospital" size={20} /></span>
-                                <div className="stat-text">
-                                    <span className="val">{data.stats.private}</span>
-                                    <span className="lbl">Private</span>
-                                </div>
-                            </div>
+                    {/* Facility Row (Compact) */}
+                    <div className="section-label" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '8px' }}>FACILITY</div>
+                    <div className="stats-compact-row">
+                        <div className="stat-pill">
+                            <div className="stat-pill-icon govt"><MaterialIcon name="account_balance" size={18} /></div>
+                            <span className="stat-val">{data.stats.govt}</span>
+                            <span className="stat-lbl">Govt</span>
+                        </div>
+                        <div className="stat-pill">
+                            <div className="stat-pill-icon pvt"><MaterialIcon name="local_hospital" size={18} /></div>
+                            <span className="stat-val">{data.stats.private}</span>
+                            <span className="stat-lbl">Private</span>
                         </div>
                     </div>
                 </GlassCard>
@@ -140,23 +129,26 @@ const EddVsDeliveries = () => {
 
     const renderImportScreen = () => (
         <div className="import-container animate-enter">
-            <h3 className="import-title">Import Data via Copy-Paste</h3>
-            <div className="import-steps">
-                1. Open your Excel file (XLS or XLSX).<br />
-                2. Select the rows you want to import (including headers).<br />
-                3. Copy them (Ctrl+C).<br />
-                4. Paste them below (Ctrl+V).
+            <h3 className="import-title">Import Data</h3>
+            <div className="import-card">
+                <div className="import-steps">
+                    <strong>1.</strong> Copy rows from your Excel sheet (including headers).<br />
+                    <strong>2.</strong> Paste them below.
+                </div>
+
+                <textarea
+                    className="import-textarea"
+                    placeholder="Paste Excel data here..."
+                    spellCheck="false"
+                ></textarea>
+
+                <div style={{ marginTop: '20px' }}>
+                    <button className="preview-btn">
+                        <MaterialIcon name="visibility" size={24} />
+                        Preview Data
+                    </button>
+                </div>
             </div>
-
-            <textarea
-                className="import-textarea"
-                placeholder="Paste your Excel data here..."
-                spellCheck="false"
-            ></textarea>
-
-            <button className="preview-btn">
-                <MaterialIcon name="visibility" size={20} /> Preview Data
-            </button>
         </div>
     );
 
@@ -179,7 +171,7 @@ const EddVsDeliveries = () => {
                     onClick={() => setActiveTab('dashboard')}
                 >
                     <MaterialIcon name="dashboard" size={24} />
-                    Dashboard
+                    Monthly EDDs
                 </button>
                 <button
                     className={`edd-tab-btn ${activeTab === 'entries' ? 'active' : ''}`}
