@@ -1,6 +1,6 @@
 import React from 'react';
-import PageHeader from '../../../components/ui/PageHeader';
-import '../../../pages/Home.css';
+import PageHeader from '../../../../components/ui/PageHeader';
+import '../../../../pages/Home.css';
 
 const AncRegistration = () => {
     return (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MaterialIcon from '../../../components/ui/MaterialIcon';
+import MaterialIcon from '../../../../components/ui/MaterialIcon';
 
 const PhcMonthlyDashboard = ({ data }) => {
     // data prop would contain the stats for the selected month
@@ -11,9 +11,10 @@ const PhcMonthlyDashboard = ({ data }) => {
         delivered: 0,
         aborted: 0,
         primi: 0,
+        prevNormal: 0,
         prevLscs: 0,
         normal: { govt: 0, pvt: 0, other: 0 },
-        scs: { govt: 0, pvt: 0, other: 0 },
+        lscs: { govt: 0, pvt: 0, other: 0 },
         abortions: {
             lt8: { govt: 0, pvt: 0, home: 0 },
             b8to12: { govt: 0, pvt: 0, home: 0 },
@@ -23,7 +24,7 @@ const PhcMonthlyDashboard = ({ data }) => {
     };
 
     // Tabs for Delivered
-    const [delTab, setDelTab] = useState('Normal'); // 'Normal' or 'SCS'
+    const [delTab, setDelTab] = useState('Normal'); // 'Normal' or 'LSCS'
 
     // Tabs for Aborted
     const [abortTab, setAbortTab] = useState('lt8'); // 'lt8', 'b8to12', 'b12to20', 'mt20'
@@ -81,10 +82,14 @@ const PhcMonthlyDashboard = ({ data }) => {
                 <div className="section-badge">{stats.pending} Total</div>
             </div>
 
-            <div className="details-card-dark" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="details-card-dark" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                 <div className="stats-block">
                     <span className="stats-block-val val-teal">{stats.primi}</span>
                     <span className="stats-block-lbl">PRIMI</span>
+                </div>
+                <div className="stats-block">
+                    <span className="stats-block-val val-blue">{stats.prevNormal}</span>
+                    <span className="stats-block-lbl">PREV NORMAL</span>
                 </div>
                 <div className="stats-block">
                     <span className="stats-block-val val-orange">{stats.prevLscs}</span>
@@ -108,10 +113,10 @@ const PhcMonthlyDashboard = ({ data }) => {
                         Normal
                     </button>
                     <button
-                        className={`segment-btn ${delTab === 'SCS' ? 'active' : ''}`}
-                        onClick={() => setDelTab('SCS')}
+                        className={`segment-btn ${delTab === 'LSCS' ? 'active' : ''}`}
+                        onClick={() => setDelTab('LSCS')}
                     >
-                        SCS
+                        LSCS
                     </button>
                 </div>
 
@@ -119,19 +124,19 @@ const PhcMonthlyDashboard = ({ data }) => {
                 <div className="stats-blocks-grid">
                     <div className="stats-block">
                         <span className="stats-block-val val-blue">
-                            {delTab === 'Normal' ? stats.normal.govt : stats.scs.govt}
+                            {delTab === 'Normal' ? stats.normal.govt : stats.lscs.govt}
                         </span>
                         <span className="stats-block-lbl">GOVT</span>
                     </div>
                     <div className="stats-block">
                         <span className="stats-block-val val-purple">
-                            {delTab === 'Normal' ? stats.normal.pvt : stats.scs.pvt}
+                            {delTab === 'Normal' ? stats.normal.pvt : stats.lscs.pvt}
                         </span>
                         <span className="stats-block-lbl">PRIVATE</span>
                     </div>
                     <div className="stats-block">
                         <span className="stats-block-val val-teal">
-                            {delTab === 'Normal' ? stats.normal.other : stats.scs.other}
+                            {delTab === 'Normal' ? stats.normal.other : stats.lscs.other}
                         </span>
                         <span className="stats-block-lbl">OTHER</span>
                     </div>
@@ -142,7 +147,7 @@ const PhcMonthlyDashboard = ({ data }) => {
                     <span className="footer-val">
                         {delTab === 'Normal'
                             ? (stats.normal.govt + stats.normal.pvt + stats.normal.other)
-                            : (stats.scs.govt + stats.scs.pvt + stats.scs.other)
+                            : (stats.lscs.govt + stats.lscs.pvt + stats.lscs.other)
                         }
                     </span>
                 </div>

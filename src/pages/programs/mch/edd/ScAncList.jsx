@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import PageHeader from '../../../components/ui/PageHeader';
-import MaterialIcon from '../../../components/ui/MaterialIcon';
+import PageHeader from '../../../../components/ui/PageHeader';
+import MaterialIcon from '../../../../components/ui/MaterialIcon';
 import './ScAncList.css';
 
 const ScAncList = () => {
@@ -120,7 +120,7 @@ const ScAncList = () => {
                                 <div className="benef-details">
                                     <span className="benef-name">{b.name}</span>
                                     <span className="benef-meta" style={{ marginBottom: '2px' }}>Husband: {b.husband}</span>
-                                    <span className="benef-meta" style={{ color: '#fff', fontWeight: 500 }}>{b.status}</span>
+                                    <span className="benef-meta" style={{ fontWeight: 500 }}>{b.status}</span>
                                 </div>
                             </div>
                             {/* Call Button */}

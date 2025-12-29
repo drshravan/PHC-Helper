@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import PageHeader from '../../../components/ui/PageHeader';
-import MaterialIcon from '../../../components/ui/MaterialIcon';
+import PageHeader from '../../../../components/ui/PageHeader';
+import MaterialIcon from '../../../../components/ui/MaterialIcon';
 import PhcMonthlyDashboard from './PhcMonthlyDashboard';
 import PhcSubCentersList from './PhcSubCentersList';
 import './PhcMonthlyInput.css';
@@ -32,9 +32,10 @@ const PhcMonthlyInput = () => {
         delivered: 0,
         aborted: 0,
         primi: 0,
+        prevNormal: 0,
         prevLscs: 0,
         normal: { govt: 0, pvt: 0, other: 0 },
-        scs: { govt: 0, pvt: 0, other: 0 },
+        lscs: { govt: 0, pvt: 0, other: 0 },
         abortions: {
             lt8: { govt: 0, pvt: 0, home: 0 },
             b8to12: { govt: 0, pvt: 0, home: 0 },

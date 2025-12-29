@@ -1,0 +1,560 @@
+/* === ANC EDIT RECORD THEME (Aligned with Home UI) === */
+
+.edit-record-wrapper {
+    padding: 8px;
+    padding-top: 0px;
+    padding-bottom: 100px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* --- CUSTOM HEADER --- */
+.glass-header {
+    background: rgba(255, 255, 255, 0.8);
+    /* Light Mode Glass Default */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    padding: 12px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    margin: -20px -20px 20px -20px;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark Mode Support for Header */
+@media (prefers-color-scheme: dark) {
+    .glass-header {
+        background: rgba(41, 45, 50, 0.9);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    }
+}
+
+html.dark-mode .glass-header {
+    background: rgba(41, 45, 50, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ... existing styles ... */
+
+/* --- CIRCULAR STEPPER (Refined) --- */
+.circle-stepper-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    /* Sticky Logic */
+    position: sticky;
+    top: 70px;
+    z-index: 99;
+    background: rgba(255, 255, 255, 0.8);
+    /* Light Mode Glass */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    margin: 0 -20px 20px -20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: background 0.3s ease;
+}
+
+/* Dark Mode Support for Stepper */
+@media (prefers-color-scheme: dark) {
+    .circle-stepper-container {
+        background: rgba(41, 45, 50, 0.95);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+}
+
+html.dark-mode .circle-stepper-container {
+    background: rgba(41, 45, 50, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ... existing styles ... */
+
+/* Date Picker Icon Color Fix */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.2s;
+    /* Default: Dark icon for Light Mode (No filter needed usually, or specific for dark text) */
+}
+
+/* Dark Mode Override for Icon */
+@media (prefers-color-scheme: dark) {
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
+}
+
+html.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    /* Cyan/Teal Tint for Hover - Works best on dark backgrounds, might need adjustment for light */
+    /* Only apply tint transform if not in pure light mode or handle creatively */
+}
+
+.header-content {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-titles {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.header-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.header-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0;
+    margin-top: 2px;
+}
+
+.header-action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--neu-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-primary);
+    text-decoration: none;
+    box-shadow: var(--shadow-flat);
+    transition: 0.2s ease;
+}
+
+.header-action-btn:active {
+    box-shadow: var(--shadow-pressed);
+    transform: scale(0.95);
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+
+
+.circle-step-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.circle-step-item:active {
+    transform: scale(0.95);
+}
+
+/* Circular Progress Indicator */
+.step-circle-wrapper {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neu-bg);
+    border-radius: 50%;
+    box-shadow: var(--shadow-flat);
+}
+
+/* SVG ring container */
+.step-ring-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    /* Start from top */
+    pointer-events: none;
+}
+
+/* Background Ring */
+.step-ring-bg {
+    stroke: var(--neu-border-color);
+    /* Subtle dark border */
+    stroke-width: 3;
+    fill: none;
+    opacity: 0.3;
+}
+
+/* Progress Ring */
+.step-ring-progress {
+    stroke: var(--accent-primary);
+    /* Uses Main Theme Accent (Blue/Cyan) */
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+/* Inner Circle Content */
+.step-inner-content {
+    z-index: 2;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Active State Text Color */
+.circle-step-item.active .step-inner-content {
+    color: var(--text-primary);
+}
+
+/* Completed State (Checkmark) */
+.circle-step-item.completed .step-inner-content {
+    color: var(--success-color);
+    /* Kept green only for checkmark meaning success */
+}
+
+/* Step Label Text */
+.step-label-text {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.circle-step-item.active .step-label-text {
+    color: var(--text-primary);
+}
+
+/* Connecting Dashed Line */
+.step-connector-line {
+    flex: 1;
+    height: 2px;
+    background: var(--neu-bg);
+    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5), inset -1px -1px 2px rgba(255, 255, 255, 0.05);
+    /* Sunken line */
+    margin: 0 4px;
+    position: relative;
+    border-radius: 2px;
+}
+
+/* --- SECTIONS --- */
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    /* Cyan/Blue pop */
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-card {
+    background: var(--neu-bg);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-flat);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Slight highlight */
+}
+
+/* --- ICONS & INPUTS --- */
+.input-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.input-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.green-input {
+    width: 100%;
+    background: var(--neu-bg);
+    border: none;
+    /* Neumorphism relies on shadow, not border */
+    border-radius: 12px;
+    padding: 16px;
+    padding-right: 48px;
+    /* Added padding to prevent text overlap with icons */
+    color: var(--text-primary);
+    font-size: 1rem;
+    outline: none;
+    box-shadow: var(--shadow-pressed);
+    /* Inner shadow for input */
+    transition: box-shadow 0.2s ease;
+}
+
+.green-input:focus {
+    box-shadow: var(--shadow-pressed), 0 0 0 2px var(--accent-primary);
+    /* Pressed + Glow */
+}
+
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.input-icon-right {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent-primary);
+    pointer-events: none;
+}
+
+/* --- CHIPS --- */
+.chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.chip {
+    padding: 10px 20px;
+    border-radius: 20px;
+    background: var(--neu-bg);
+    box-shadow: var(--shadow-flat);
+    /* Pop out */
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.chip:active {
+    box-shadow: var(--shadow-pressed);
+    transform: scale(0.95);
+}
+
+.chip.active {
+    color: var(--accent-primary);
+    box-shadow: var(--shadow-pressed);
+    /* Pressed in when active */
+    border: 1px solid var(--accent-primary);
+    font-weight: 600;
+}
+
+.chip-suggestion {
+    padding: 6px 14px;
+    border-radius: 16px;
+    background: transparent;
+    border: 1px solid var(--text-muted);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.chip-suggestion:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+/* Error State for Inputs */
+.green-input.error-input {
+    border: 1px solid var(--error-color);
+    box-shadow: 0 0 0 1px var(--error-color);
+}
+
+.error-msg {
+    color: var(--error-color);
+    font-size: 0.75rem;
+    margin-top: 4px;
+    display: block;
+    margin-left: 4px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Error State for Stepper Ring */
+.circle-step-item.error .step-ring-progress {
+    stroke: var(--error-color);
+}
+
+/* Ensure checkmark or number inside doesn't clash */
+.circle-step-item.error .step-inner-content {
+    color: var(--error-color);
+}
+
+/* --- CARDS FOR HISTORY --- */
+.history-card {
+    background: var(--neu-bg);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-pressed);
+    /* Distinctive "sunken" or "flat" area inside card */
+    border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.history-header {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 8px;
+}
+
+/* --- BUTTONS --- */
+.action-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+    margin-top: 30px;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--neu-bg);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-flat);
+    border: 1px solid var(--accent-primary);
+    /* Slight accent border */
+}
+
+.btn-primary:active {
+    box-shadow: var(--shadow-pressed);
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    background: var(--neu-bg);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-flat);
+}
+
+.green-select {
+    width: 100%;
+    background: var(--neu-bg);
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    outline: none;
+    appearance: none;
+    box-shadow: var(--shadow-pressed);
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%233182ce%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px top 50%;
+    background-size: 12px auto;
+}
+
+.calc-box {
+    background: var(--neu-bg);
+    /* sunken or just regular bg */
+    border: 1px solid var(--accent-primary);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent-primary);
+    font-size: 0.9rem;
+    margin-top: 12px;
+    box-shadow: var(--shadow-pressed);
+}
+
+.readonly-val {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Dashed Add Button for Chips */
+.chip-dashed {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px dashed var(--text-secondary);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    margin-top: 8px;
+}
+
+.chip-dashed:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.05);
+}

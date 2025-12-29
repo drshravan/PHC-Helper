@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MaterialIcon from '../../../components/ui/MaterialIcon';
-import PageHeader from '../../../components/ui/PageHeader';
-import GlassCard from '../../../components/ui/GlassCard';
+import MaterialIcon from '../../../../components/ui/MaterialIcon';
+import PageHeader from '../../../../components/ui/PageHeader';
+import GlassCard from '../../../../components/ui/GlassCard';
 import './EddVsDeliveries.css';
 
 const EddVsDeliveries = () => {
@@ -20,6 +20,7 @@ const EddVsDeliveries = () => {
         { month: 'February', year: '2026', total: 40, stats: { normal: 0, lscs: 0, abortions: 0, govt: 0, private: 0 } },
         { month: 'January', year: '2026', total: 53, stats: { normal: 0, lscs: 0, abortions: 0, govt: 0, private: 0 } },
     ];
+
 
     // --- PIN Logic ---
     const handlePinChange = (index, value) => {
@@ -211,7 +212,7 @@ const EddVsDeliveries = () => {
 
         try {
             // Dynamically import to avoid build errors if file missing
-            const { db } = await import('../../../firebase');
+            const { db } = await import('../../../../firebase');
             const { collection, addDoc } = await import('firebase/firestore');
 
             const batchPromises = parsedData.map(item => {

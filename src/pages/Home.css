@@ -3,7 +3,7 @@
 .home-wrapper {
   padding: 16px;
   /* Optimized symmetric padding for mobile */
-  padding-top: 30px;
+  padding-top: 0;
   max-width: 800px;
   margin: 0 auto;
   width: 100%;

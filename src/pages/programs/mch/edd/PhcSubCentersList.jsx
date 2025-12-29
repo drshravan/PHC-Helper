@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import MaterialIcon from '../../../components/ui/MaterialIcon';
+import MaterialIcon from '../../../../components/ui/MaterialIcon';
 
 const PhcSubCentersList = ({ centers }) => {
     const navigate = useNavigate();
