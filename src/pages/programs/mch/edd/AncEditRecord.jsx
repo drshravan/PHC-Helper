@@ -44,34 +44,36 @@ const CircleStepRequest = ({ stepNum, label, isLast, currentStep, handleStepClic
 };
 
 const AncEditRecord = () => {
-    const { monthId, subCenterId, recordId } = useParams();
+    const { recordId } = useParams();
     const navigate = useNavigate();
 
     // --- STEPS ---
     const [currentStep, setCurrentStep] = useState(1);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     // --- FORM STATE ---
     const [formData, setFormData] = useState({
         // 1. Basic
-        motherName: "Sunita Devi",
-        mobile: "9876543210",
-        lmpDate: "2023-10-15",
-        eddDate: "2024-07-22",
-        sNo: "1",
-        motherId: "1234567890",
-        district: "Warangal",
-        phc: "Malkapur",
+        motherName: "",
+        mobile: "",
+        lmpDate: "",
+        eddDate: "",
+        sNo: "",
+        motherId: "",
+        district: "",
+        phc: "",
         husbandName: "",
         village: "",
-        subCenter: "Malkapur(SC)",
+        subCenter: "",
         anmName: "",
         anmMobile: "",
         ashaName: "",
         ashaMobile: "",
 
         // 2. History
-        gravida: "Primi", // Primi, G2, G3...
-        historyDetails: [], // Array of { mode, facility, gender }
+        gravida: "Primi",
+        historyDetails: [],
 
         // 3. Present
         isHighRisk: "No",
@@ -85,7 +87,8 @@ const AncEditRecord = () => {
         facilityType: "",
         facilityName: "",
         facilityAddress: "",
-        pvtFacilityReason: ""
+        pvtFacilityReason: "",
+        abortionReason: ""
     });
 
     const [errors, setErrors] = useState({});
@@ -93,18 +96,58 @@ const AncEditRecord = () => {
 
     // --- CALCULATED FIELDS ---
     const [weeksCalc, setWeeksCalc] = useState("");
+    const [calcColor, setCalcColor] = useState("");
     const [customRisk, setCustomRisk] = useState("");
     const [isAddingCustom, setIsAddingCustom] = useState(false);
 
     // --- OPTIONS ---
     const gravidaOptions = ["Primi", "G2", "G3", "G4", "G5", "Multi Gravida"];
-    // Expanded List from User + Common Clinical Risks
     const riskSuggestions = [
         "Anemia", "Hypertension", "Diabetes", "Previous LSCS",
         "Age ≥ 35", "Age < 19", "Rh Negative", "Multiple Gestation",
         "Placental Disorders", "Malpresentation", "Hypothyroidism",
         "Heart Disease", "Bad Obstetric History"
     ];
+
+    // --- LOAD DATA ---
+    useEffect(() => {
+        const loadRecord = async () => {
+            if (!recordId) return;
+            try {
+                const { db } = await import('../../../../firebase');
+                const { doc, getDoc } = await import('firebase/firestore');
+
+                const docRef = doc(db, "anc_records", recordId);
+                const snap = await getDoc(docRef);
+
+                if (snap.exists()) {
+                    const data = snap.data();
+                    // Merge with defaults to ensure all fields exist
+                    setFormData(prev => ({
+                        ...prev,
+                        ...data,
+                        // Normalizing keys if snake_case exists
+                        lmpDate: data.lmpDate || data.lmp_date || "",
+                        eddDate: data.eddDate || data.edd_date || "",
+                        // Ensure arrays are initialized if missing
+                        highRiskTypes: data.highRiskTypes || [],
+                        historyDetails: data.historyDetails || [],
+                        // Ensure risk is string "Yes"/"No" if stored as boolean (legacy check)
+                        isHighRisk: data.isHighRisk === true || data.isHighRisk === "Yes" ? "Yes" : "No"
+                    }));
+                } else {
+                    alert("Record not found!");
+                    navigate(-1);
+                }
+            } catch (err) {
+                console.error("Load Error", err);
+                alert("Failed to load record.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadRecord();
+    }, [recordId, navigate]);
 
     // --- HANDLERS ---
     const handleChange = (field, value) => {
@@ -125,14 +168,20 @@ const AncEditRecord = () => {
 
             setFormData(prev => {
                 const currentArr = [...prev.historyDetails];
+                // Only modify if length substantially differs to avoid overwriting user edits on load
+                // We add a simple check: if we just loaded, we might trust DB. 
+                // This effect runs on `gravida` change.
+
                 if (currentArr.length < count) {
                     for (let i = currentArr.length; i < count; i++) {
                         currentArr.push({ mode: "Normal", facility: "Govt", gender: "Male" });
                     }
+                    return { ...prev, historyDetails: currentArr };
                 } else if (currentArr.length > count) {
                     currentArr.splice(count);
+                    return { ...prev, historyDetails: currentArr };
                 }
-                return { ...prev, historyDetails: currentArr };
+                return prev;
             });
         }
     }, [formData.gravida]);
@@ -166,31 +215,62 @@ const AncEditRecord = () => {
     };
 
     // Calculate Weeks
+    // Calculate Weeks
+    // Calculate Weeks
+    // Calculate Weeks
     useEffect(() => {
-        if (formData.deliveryStatus === 'Delivered' && formData.deliveredDate && formData.lmpDate) {
-            const lmp = new Date(formData.lmpDate);
+        let lmpDate = null;
+
+        // Determine effective LMP
+        if (formData.lmpDate) {
+            lmpDate = new Date(formData.lmpDate);
+        } else if (formData.eddDate) {
+            // Calculate LMP from EDD (EDD - 40 weeks or 280 days)
+            const edd = new Date(formData.eddDate);
+            if (!isNaN(edd)) {
+                lmpDate = new Date(edd);
+                lmpDate.setDate(edd.getDate() - 280);
+            }
+        }
+
+        if (formData.deliveryStatus === 'Delivered' && formData.deliveredDate && lmpDate) {
             const del = new Date(formData.deliveredDate);
-            if (!isNaN(lmp) && !isNaN(del)) {
-                const diffTime = Math.abs(del - lmp);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const w = Math.floor(diffDays / 7);
-                const d = diffDays % 7;
-                setWeeksCalc(`${w} Weeks ${d} Days`);
+            if (!isNaN(lmpDate) && !isNaN(del)) {
+                const diffTime = del - lmpDate;
+                if (diffTime < 0) {
+                    setWeeksCalc("Invalid Date (Before Estimated LMP)");
+                    setCalcColor("var(--error-color)");
+                } else {
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const w = Math.floor(diffDays / 7);
+                    const d = diffDays % 7;
+                    setWeeksCalc(`${w} Weeks ${d} Days`);
+                    setCalcColor(w < 28 ? "var(--error-color)" : "var(--success-color)");
+                }
             }
-        } else if (formData.deliveryStatus === 'Aborted' && formData.abortedDate && formData.lmpDate) {
-            const lmp = new Date(formData.lmpDate);
+        } else if (formData.deliveryStatus === 'Aborted' && formData.abortedDate && lmpDate) {
             const ab = new Date(formData.abortedDate);
-            if (!isNaN(lmp) && !isNaN(ab)) {
-                const diffTime = Math.abs(ab - lmp);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const w = Math.floor(diffDays / 7);
-                const d = diffDays % 7;
-                setWeeksCalc(`${w} Weeks ${d} Days`);
+            if (!isNaN(lmpDate) && !isNaN(ab)) {
+                const diffTime = ab - lmpDate;
+                if (diffTime < 0) {
+                    setWeeksCalc("Invalid Date (Before Estimated LMP)");
+                    setCalcColor("var(--error-color)");
+                } else {
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const w = Math.floor(diffDays / 7);
+                    const d = diffDays % 7;
+                    setWeeksCalc(`${w} Weeks ${d} Days`);
+                    setCalcColor(w > 12 ? "var(--error-color)" : "orange");
+                }
             }
+        } else if ((formData.deliveryStatus === 'Aborted' && formData.abortedDate) || (formData.deliveryStatus === 'Delivered' && formData.deliveredDate)) {
+            setWeeksCalc("LMP/EDD Missing - Cannot Calculate");
+            setCalcColor("var(--text-muted)");
         } else {
             setWeeksCalc("");
+            setCalcColor("");
         }
-    }, [formData.deliveredDate, formData.abortedDate, formData.deliveryStatus, formData.lmpDate]);
+    }, [formData.deliveredDate, formData.abortedDate, formData.deliveryStatus, formData.lmpDate, formData.eddDate]);
 
 
     const getStepProgress = (step) => {
@@ -209,7 +289,8 @@ const AncEditRecord = () => {
             if (totalRows === 0) return 0;
             let rowsValid = 0;
             formData.historyDetails.forEach(d => {
-                if (d.mode && d.facility && d.gender) rowsValid++;
+                const needsGender = d.mode !== 'Aborted';
+                if (d.mode && d.facility && (!needsGender || d.gender)) rowsValid++;
             });
             return Math.round((rowsValid / totalRows) * 100);
         }
@@ -232,6 +313,54 @@ const AncEditRecord = () => {
         return 0;
     };
 
+    const validateAllSteps = () => {
+        const newErrors = {};
+        const newStepErrors = {};
+        let isValid = true;
+
+        // --- STEP 1 CHECKS ---
+        let step1Valid = true;
+        if (!formData.husbandName) { newErrors.husbandName = "Husband Name is required"; step1Valid = false; }
+        if (!formData.village) { newErrors.village = "Village is required"; step1Valid = false; }
+        if (!formData.anmName) { newErrors.anmName = "ANM Name is required"; step1Valid = false; }
+        if (formData.anmMobile && !/^\d{10}$/.test(formData.anmMobile)) { newErrors.anmMobile = "Must be 10 digits"; step1Valid = false; }
+        if (formData.ashaMobile && !/^\d{10}$/.test(formData.ashaMobile)) { newErrors.ashaMobile = "Must be 10 digits"; step1Valid = false; }
+        newStepErrors[1] = !step1Valid;
+        if (!step1Valid) isValid = false;
+
+        // --- STEP 2 CHECKS ---
+        let step2Valid = true;
+        if (formData.gravida !== 'Primi') {
+            formData.historyDetails.forEach((d, idx) => {
+                const needsGender = d.mode !== 'Aborted';
+                if (!d.mode || !d.facility || (needsGender && !d.gender)) {
+                    newErrors[`history_${idx}`] = "Incomplete history";
+                    step2Valid = false;
+                }
+            });
+        }
+        newStepErrors[2] = !step2Valid;
+        if (!step2Valid) isValid = false;
+
+        // --- STEP 3 CHECKS ---
+        let step3Valid = true;
+        if (formData.deliveryStatus === 'Delivered') {
+            if (!formData.deliveryMode) { newErrors.deliveryMode = "Required"; step3Valid = false; }
+            if (!formData.deliveredDate) { newErrors.deliveredDate = "Required"; step3Valid = false; }
+            if (!formData.facilityType) { newErrors.facilityType = "Required"; step3Valid = false; }
+        }
+        if (formData.deliveryStatus === 'Aborted') {
+            if (!formData.abortedDate) { newErrors.abortedDate = "Required"; step3Valid = false; }
+        }
+        newStepErrors[3] = !step3Valid;
+        if (!step3Valid) isValid = false;
+
+        setErrors(newErrors);
+        setStepErrors(newStepErrors);
+
+        return isValid;
+    };
+
     const validateCurrentStep = () => {
         const step = currentStep;
         const newErrors = {};
@@ -241,11 +370,14 @@ const AncEditRecord = () => {
             if (!formData.husbandName) newErrors.husbandName = "Husband Name is required";
             if (!formData.village) newErrors.village = "Village is required";
             if (!formData.anmName) newErrors.anmName = "ANM Name is required";
+            if (formData.anmMobile && !/^\d{10}$/.test(formData.anmMobile)) newErrors.anmMobile = "Must be 10 digits";
+            if (formData.ashaMobile && !/^\d{10}$/.test(formData.ashaMobile)) newErrors.ashaMobile = "Must be 10 digits";
         }
         if (step === 2) {
             if (formData.gravida !== 'Primi') {
                 formData.historyDetails.forEach((d, idx) => {
-                    if (!d.mode || !d.facility || !d.gender) {
+                    const needsGender = d.mode !== 'Aborted';
+                    if (!d.mode || !d.facility || (needsGender && !d.gender)) {
                         newErrors[`history_${idx}`] = "Incomplete history";
                         isValid = false;
                     }
@@ -265,29 +397,74 @@ const AncEditRecord = () => {
 
         if (Object.keys(newErrors).length > 0) isValid = false;
 
-        setErrors(newErrors);
+        // Merge with existing errors to avoid clearing other steps' errors if we were multi-step validating
+        // But for local next, we might want to just set. 
+        // Let's just setErrors(newErrors) for current step focus.
+        // Actually, if we want to keep "red steppers" persistent, we shouldn't clear stepErrors for others.
+        // But here we are just validating current step to proceed.
+
+        setErrors(prev => ({ ...prev, ...newErrors }));
         setStepErrors(prev => ({ ...prev, [step]: !isValid }));
 
         return isValid;
     };
 
+    const saveToFirestore = async () => {
+        setIsSaving(true);
+        try {
+            const { db } = await import('../../../../firebase');
+            const { doc, updateDoc } = await import('firebase/firestore');
+
+            const dataToSave = {
+                ...formData,
+                isHighRisk: formData.isHighRisk === 'Yes',
+                updatedAt: new Date().toISOString()
+            };
+
+            await updateDoc(doc(db, "anc_records", recordId), dataToSave);
+            navigate(-1);
+        } catch (err) {
+            console.error("Save Error", err);
+            alert("Failed to save. Check console.");
+            setIsSaving(false);
+        }
+    };
+
     const handleNext = () => {
-        if (validateCurrentStep()) {
-            if (currentStep < 3) setCurrentStep(prev => prev + 1);
-            else navigate(-1);
+        if (currentStep < 3) {
+            if (validateCurrentStep()) {
+                setCurrentStep(prev => prev + 1);
+            }
+        } else {
+            // Validate ALL before saving
+            if (validateAllSteps()) {
+                saveToFirestore();
+            } else {
+                // Determine first invalid step to maybe jump to?
+                // Or just show toast? For now, the steppers turn red.
+                // Optionally jump to first error:
+                // if (stepErrors[1]) setCurrentStep(1); ...
+            }
         }
     };
 
     const handleStepClick = (step) => {
-        // Optional: Only allow navigation if previous steps valid? 
-        // For now allowing free navigation as per generic stepper UX, but could restrict.
-        // If we want to validate on leave:
-        // validateCurrentStep(); 
+        // Optional: Validate before jumping? Or allow free navigation?
+        // Usually safer to validate "Current" before leaving if going forward.
+        // For now, allow clicks for flexibility, but Save checks validation.
         setCurrentStep(step);
     };
 
     const inputErrorClass = (field) => errors[field] ? 'green-input error-input' : 'green-input';
     const renderError = (field) => errors[field] && <span className="error-msg">{errors[field]}</span>;
+
+    if (isLoading) {
+        return (
+            <div className="home-wrapper edd-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ color: 'var(--text-secondary)' }}>Loading Record...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="home-wrapper edd-container">
@@ -298,7 +475,7 @@ const AncEditRecord = () => {
                     </button>
                     <div className="header-titles">
                         <h1 className="header-title">{formData.motherName}</h1>
-                        <p className="header-subtitle">EDD: {formData.eddDate} • {formData.subCenter}</p>
+                        <p className="header-subtitle">EDD: {formData.eddDate ? formData.eddDate.split('-').reverse().join('/') : 'N/A'} • {formData.subCenter}</p>
                     </div>
                     <a href={`tel:${formData.mobile}`} className="header-action-btn">
                         <MaterialIcon name="call" size={24} />
@@ -355,10 +532,11 @@ const AncEditRecord = () => {
                         <div className="input-group">
                             <label className="input-label">ANM Mobile</label>
                             <div className="input-wrapper">
-                                <input type="tel" className="green-input" maxLength={10}
+                                <input type="tel" className={inputErrorClass('anmMobile')} maxLength={10}
                                     value={formData.anmMobile} onChange={(e) => handleChange('anmMobile', e.target.value)} />
                                 <span className="input-suffix">{formData.anmMobile ? formData.anmMobile.length : 0}/10</span>
                             </div>
+                            {renderError('anmMobile')}
                         </div>
                         <div className="input-group">
                             <label className="input-label">ASHA Name</label>
@@ -368,10 +546,11 @@ const AncEditRecord = () => {
                         <div className="input-group">
                             <label className="input-label">ASHA Mobile</label>
                             <div className="input-wrapper">
-                                <input type="tel" className="green-input" maxLength={10}
+                                <input type="tel" className={inputErrorClass('ashaMobile')} maxLength={10}
                                     value={formData.ashaMobile} onChange={(e) => handleChange('ashaMobile', e.target.value)} />
                                 <span className="input-suffix">{formData.ashaMobile ? formData.ashaMobile.length : 0}/10</span>
                             </div>
+                            {renderError('ashaMobile')}
                         </div>
                     </div>
                 )}
@@ -402,24 +581,26 @@ const AncEditRecord = () => {
                                     </div>
                                 </div>
 
-                                <div className="input-group">
-                                    <label className="input-label">Baby Gender</label>
-                                    <div className="chips-container">
-                                        {['Male', 'Female'].map(gen => (
-                                            <div key={gen}
-                                                className={`chip ${details.gender === gen ? 'active' : ''}`}
-                                                onClick={() => handleHistoryChange(idx, 'gender', gen)}>
-                                                <MaterialIcon name={gen === 'Male' ? 'male' : 'female'} size={18} style={{ marginRight: 4 }} />
-                                                {gen}
-                                            </div>
-                                        ))}
+                                {details.mode !== 'Aborted' && (
+                                    <div className="input-group animate-pop">
+                                        <label className="input-label">Baby Gender</label>
+                                        <div className="chips-container">
+                                            {['Male', 'Female'].map(gen => (
+                                                <div key={gen}
+                                                    className={`chip ${details.gender === gen ? 'active' : ''}`}
+                                                    onClick={() => handleHistoryChange(idx, 'gender', gen)}>
+                                                    <MaterialIcon name={gen === 'Male' ? 'male' : 'female'} size={18} style={{ marginRight: 4 }} />
+                                                    {gen}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="input-group">
                                     <label className="input-label">Facility</label>
                                     <div className="chips-container">
-                                        {['Govt', 'Pvt', 'Others'].map(fac => (
+                                        {(details.mode === 'Aborted' ? ['Govt', 'Pvt', 'Home', 'Others'] : ['Govt', 'Pvt', 'Others']).map(fac => (
                                             <div key={fac}
                                                 className={`chip ${details.facility === fac ? 'active' : ''}`}
                                                 onClick={() => handleHistoryChange(idx, 'facility', fac)}>
@@ -534,7 +715,7 @@ const AncEditRecord = () => {
                                     <input type="date" className={inputErrorClass('deliveredDate')} value={formData.deliveredDate} onChange={(e) => handleChange('deliveredDate', e.target.value)} />
                                 </div>
                                 {weeksCalc && (
-                                    <div className="calc-box animate-enter">
+                                    <div className="calc-box animate-enter" style={{ color: calcColor || 'var(--accent-primary)', borderColor: calcColor || 'var(--accent-primary)' }}>
                                         <MaterialIcon name="calculate" size={16} /> Calculation: {weeksCalc} from LMP
                                     </div>
                                 )}
@@ -575,18 +756,23 @@ const AncEditRecord = () => {
                         {formData.deliveryStatus === 'Aborted' && (
                             <div className="animate-pop">
                                 <div className="input-group">
-                                    <label className="input-label">Aborted Date {errors.abortedDate && '*'}</label>
+                                    <label className="input-label">Abortion Date {errors.abortedDate && '*'}</label>
                                     <input type="date" className={inputErrorClass('abortedDate')} value={formData.abortedDate} onChange={(e) => handleChange('abortedDate', e.target.value)} />
                                 </div>
                                 {weeksCalc && (
-                                    <div className="calc-box animate-enter">
+                                    <div className="calc-box animate-enter" style={{ color: calcColor || 'var(--accent-primary)', borderColor: calcColor || 'var(--accent-primary)' }}>
                                         <MaterialIcon name="calculate" size={16} /> Calculation: {weeksCalc} from LMP
                                     </div>
                                 )}
+                                <div className="input-group" style={{ marginTop: '12px' }}>
+                                    <label className="input-label">Reason for Abortion</label>
+                                    <input type="text" className="green-input" placeholder="Spontaneous / MTP / Other..."
+                                        value={formData.abortionReason} onChange={(e) => handleChange('abortionReason', e.target.value)} />
+                                </div>
                                 <div className="input-group">
                                     <label className="input-label">Facility Type</label>
                                     <div className="chips-container">
-                                        {['Govt', 'Pvt', 'Others'].map(f => (
+                                        {['Govt', 'Pvt', 'Home', 'Others'].map(f => (
                                             <div key={f} className={`chip ${formData.facilityType === f ? 'active' : ''}`}
                                                 onClick={() => handleChange('facilityType', f)}>{f}</div>
                                         ))}
@@ -607,8 +793,8 @@ const AncEditRecord = () => {
                             <MaterialIcon name="arrow_back" size={20} /> Back
                         </button>
                     )}
-                    <button className="action-btn btn-primary" onClick={handleNext}>
-                        {currentStep === 3 ? <><MaterialIcon name="save" size={20} /> Save Details</> : <>Next Step <MaterialIcon name="arrow_forward" size={20} /></>}
+                    <button className="action-btn btn-primary" onClick={handleNext} disabled={isSaving}>
+                        {isSaving ? 'Saving...' : (currentStep === 3 ? <><MaterialIcon name="save" size={20} /> Save Details</> : <>Next Step <MaterialIcon name="arrow_forward" size={20} /></>)}
                     </button>
                 </div>
             </div>

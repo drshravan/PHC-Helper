@@ -61,26 +61,35 @@
 
 /* --- COMPACT MONTH CARD --- */
 .month-card.modern-card {
-    padding: 20px;
-    margin: 10px 10px 24px 10px;
+    padding: 16px;
+    margin: 30px 10px 16px 10px;
+
+    /* Standard Neumorphic Card */
     background: var(--neu-bg);
-    border-radius: 20px;
     box-shadow: var(--shadow-flat);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: transform 0.2s ease;
+    border: 1px solid var(--neu-border-color);
+    border-radius: 20px;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    color: var(--text-primary);
 }
 
 .month-card.modern-card:active {
     transform: scale(0.98);
+    box-shadow: var(--shadow-pressed);
 }
 
-/* Header: Month | Total */
+/* Header */
 .month-header-modern {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding-bottom: 16px;
+    border-bottom: 1px solid var(--neu-border-color);
+    /* Theme border */
+    padding-bottom: 12px;
     margin-bottom: 16px;
 }
 
@@ -96,21 +105,23 @@
     font-size: 0.85rem;
     color: var(--text-muted);
     letter-spacing: 1px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .total-badge-modern {
     text-align: right;
     background: var(--neu-bg);
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: 12px;
+
+    /* Pressed/Inset Look for value container */
     box-shadow: var(--shadow-pressed);
-    /* Inset look for value */
+    border: 1px solid var(--neu-border-color);
 }
 
 .badge-label {
     display: block;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
     color: var(--text-muted);
     font-weight: 700;
@@ -118,104 +129,113 @@
 }
 
 .badge-value {
-    display: block;
     font-size: 1.4rem;
-    font-weight: 800;
+    font-weight: 900;
     color: var(--accent-primary);
     line-height: 1;
+    text-shadow: none;
+    display: block;
 }
 
-/* Stats Row: Compact icons inline */
+.stat-section-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+/* Stats Row */
 .stats-compact-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .stat-pill {
     flex: 1;
+    min-width: 80px;
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    /* Neumorphic Pressed/Well Look */
     background: var(--neu-bg);
-    border-radius: 16px;
-    padding: 12px 6px;
     box-shadow: var(--shadow-pressed);
-    /* Inset look */
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--neu-border-color);
+
+    border-radius: 16px;
+    padding: 12px 8px;
+    transition: all 0.2s;
+}
+
+.stat-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-flat);
+    /* Pop out on hover */
 }
 
 .stat-pill-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
-    color: #fff;
+    margin-bottom: 6px;
     font-size: 1.1rem;
+
+    /* Neumorphic Button Pop */
+    background: var(--neu-bg);
     box-shadow: var(--shadow-flat);
-    /* Icon pops out */
+    border: 1px solid var(--neu-border-color);
 }
 
-/* Colors based on Theme Variables */
+/* Specific Colors for Icons (Text/Border only to maintain Neumorphism) */
 .stat-pill-icon.normal {
-    background: var(--neu-bg);
     color: var(--success-color);
-    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--success-color);
 }
 
 .stat-pill-icon.lscs {
-    background: var(--neu-bg);
-    color: #ff9800;
-    /* Orange for LSCS */
-    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.05);
-    border: 1px solid #ff9800;
+    color: #FF9800;
+    /* Orange */
 }
 
 .stat-pill-icon.abort {
-    background: var(--neu-bg);
     color: var(--error-color);
-    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--error-color);
 }
 
 .stat-pill-icon.govt {
-    background: var(--neu-bg);
     color: var(--accent-primary);
-    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--accent-primary);
 }
 
 .stat-pill-icon.pvt {
-    background: var(--neu-bg);
     color: var(--accent-secondary);
-    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--accent-secondary);
 }
 
 .stat-val {
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 800;
     color: var(--text-primary);
+    margin-bottom: 2px;
 }
 
 .stat-lbl {
-    font-size: 0.65rem;
+    font-size: 0.55rem;
     color: var(--text-secondary);
     text-transform: uppercase;
-    margin-top: 4px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 /* Divider */
 .section-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.05);
-    margin: 20px 0;
+    background: transparent;
+    border-bottom: 1px solid var(--neu-border-color);
+    margin: 12px 0;
 }
 
 /* --- LOCK SCREEN --- */
@@ -276,15 +296,19 @@
 }
 
 .import-card {
-    background: var(--pc-card-glass);
-    border: 1px solid var(--pc-border);
+    background: var(--neu-bg);
+    /* Fixed from pc-card-glass */
+    border: 1px solid var(--neu-border-color);
+    /* Fixed from pc-border */
     border-radius: 20px;
     padding: 24px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-flat);
 }
 
 .import-steps {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--neu-bg);
+    box-shadow: var(--shadow-pressed);
+    /* Lighter bg for integration */
     padding: 16px;
     border-radius: 12px;
     font-size: 0.9rem;
@@ -297,38 +321,39 @@
 .import-textarea {
     width: 100%;
     height: 200px;
-    background: rgba(0, 0, 0, 0.25);
-    /* Dark Glass Input */
-    border: 1px solid var(--pc-border);
+    background: var(--neu-bg);
+    /* Consistent BG */
+    /* Dark Glass Input -> Pressed Input */
+    border: 1px solid var(--neu-border-color);
     border-radius: 12px;
     padding: 16px;
     color: var(--text-primary);
     font-family: 'Consolas', 'Monaco', monospace;
-    /* Monospace for alignment */
     font-size: 0.85rem;
     resize: none;
     outline: none;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-pressed);
     transition: border-color 0.3s ease;
 }
 
 .import-textarea:focus {
     border-color: var(--accent-primary);
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(var(--accent-primary-rgb), 0.2);
+    box-shadow: var(--shadow-pressed), 0 0 0 1px rgba(var(--accent-primary-rgb), 0.2);
 }
 
 .import-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--text-muted);
 }
 
 .preview-btn {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, var(--pc-accent), #00d2ff);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     /* Gradient Btn */
     border: none;
     border-radius: 12px;
-    color: #000;
+    color: #fff;
+    /* White text for contrast */
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
@@ -336,13 +361,13 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 4px 15px rgba(0, 255, 195, 0.3);
+    box-shadow: var(--shadow-flat);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .preview-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 255, 195, 0.4);
+    box-shadow: var(--shadow-floating);
 }
 
 .preview-btn:active {

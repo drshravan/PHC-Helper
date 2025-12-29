@@ -26,7 +26,7 @@
     display: flex;
     justify-content: space-between;
     background: var(--neu-bg);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
     border-radius: 20px;
     padding: 12px 10px;
     margin-bottom: 24px;
@@ -56,7 +56,7 @@
     background: var(--neu-bg);
     box-shadow: var(--shadow-pressed);
     /* Sunken active state */
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--neu-border-color);
 }
 
 .filter-val {
@@ -81,7 +81,7 @@
 /* --- BENEFICIARY CARD --- */
 .benef-card {
     background: var(--neu-bg);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
     border-radius: 20px;
     padding: 20px;
     margin-bottom: 20px;
@@ -92,6 +92,7 @@
 
 .benef-card:active {
     transform: scale(0.98);
+    box-shadow: var(--shadow-pressed);
 }
 
 .benef-main-row {
@@ -118,7 +119,7 @@
     align-items: center;
     justify-content: center;
     color: var(--accent-primary);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
 }
 
 .benef-details {
@@ -140,6 +141,7 @@
 }
 
 .call-icon-btn {
+    text-decoration: none;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -148,23 +150,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #4caf50;
+    color: var(--success-color);
     /* Green */
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
 }
 
 .call-icon-btn:active {
     box-shadow: var(--shadow-pressed);
     transform: scale(0.95);
-    color: #43a047;
+    color: var(--success-color);
 }
 
 /* Divider */
 .card-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.05);
+    background: transparent;
+    border-bottom: 1px solid var(--neu-border-color);
     margin: 16px 0;
 }
 
@@ -195,15 +198,16 @@
 }
 
 .asha-call-btn {
+    text-decoration: none;
     display: flex;
     align-items: center;
     gap: 8px;
     background: var(--neu-bg);
     box-shadow: var(--shadow-flat);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
     padding: 8px 16px;
     border-radius: 12px;
-    color: #26a69a;
+    color: var(--accent-secondary);
     /* Tealish Green */
     font-size: 0.8rem;
     font-weight: 700;
@@ -231,7 +235,7 @@
 }
 
 .warning-text {
-    color: #ef5350;
+    color: var(--error-color);
     font-size: 0.8rem;
     font-weight: 600;
 }

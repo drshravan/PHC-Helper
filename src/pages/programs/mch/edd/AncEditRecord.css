@@ -10,33 +10,18 @@
 
 /* --- CUSTOM HEADER --- */
 .glass-header {
-    background: rgba(255, 255, 255, 0.8);
-    /* Light Mode Glass Default */
+    background: var(--neu-bg);
+    /* Standard Neumorphic Base */
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--neu-border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     padding: 12px 20px;
     position: sticky;
     top: 0;
     z-index: 100;
     margin: -20px -20px 20px -20px;
     transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-/* Dark Mode Support for Header */
-@media (prefers-color-scheme: dark) {
-    .glass-header {
-        background: rgba(41, 45, 50, 0.9);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-    }
-}
-
-html.dark-mode .glass-header {
-    background: rgba(41, 45, 50, 0.9);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* ... existing styles ... */
@@ -51,27 +36,14 @@ html.dark-mode .glass-header {
     position: sticky;
     top: 70px;
     z-index: 99;
-    background: rgba(255, 255, 255, 0.8);
-    /* Light Mode Glass */
+    background: var(--neu-bg);
+    /* Standard Neumorphic Base */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    border-bottom: 1px solid var(--neu-border-color);
     margin: 0 -20px 20px -20px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     transition: background 0.3s ease;
-}
-
-/* Dark Mode Support for Stepper */
-@media (prefers-color-scheme: dark) {
-    .circle-stepper-container {
-        background: rgba(41, 45, 50, 0.95);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-}
-
-html.dark-mode .circle-stepper-container {
-    background: rgba(41, 45, 50, 0.95);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* ... existing styles ... */
@@ -286,7 +258,7 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     padding: 24px;
     margin-bottom: 24px;
     box-shadow: var(--shadow-flat);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
     /* Slight highlight */
 }
 
@@ -450,7 +422,7 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     margin-bottom: 16px;
     box-shadow: var(--shadow-pressed);
     /* Distinctive "sunken" or "flat" area inside card */
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--neu-border-color);
 }
 
 .history-header {
@@ -458,7 +430,7 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     font-weight: 700;
     color: var(--accent-primary);
     margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--neu-border-color);
     padding-bottom: 8px;
 }
 
@@ -556,5 +528,5 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 .chip-dashed:hover {
     border-color: var(--accent-primary);
     color: var(--accent-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--neu-bg);
 }

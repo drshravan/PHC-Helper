@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import MaterialIcon from '../../../../components/ui/MaterialIcon';
 
-const PhcMonthlyDashboard = ({ data }) => {
+const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
     // data prop would contain the stats for the selected month
     // Using mock defaults if data is missing
     // Mock defaults if data is missing
@@ -40,6 +40,87 @@ const PhcMonthlyDashboard = ({ data }) => {
         }
     };
 
+    // --- REPORTS STATE & LOGIC ---
+    const [scModalOpen, setScModalOpen] = useState(false);
+
+    const generateCSV = (records) => {
+        // Header
+        const headers = ["S.No", "Mother ID", "Name", "Spouse", "Age", "Mobile", "LMP", "EDD", "Address", "SubCenter", "Status", "Delivery Mode", "Result", "Remarks"];
+        const rows = records.map((r, i) => {
+            const age = r.age || ''; // Assuming age field exists or can be derived
+            const spouse = r.husbandName || '';
+            const address = `${r.village || ''} ${r.district || ''}`.trim();
+            const remarks = r.highRiskTypes ? r.highRiskTypes.join(', ') : '';
+
+            // Clean fields to avoid CSV issues
+            const clean = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
+
+            return [
+                i + 1,
+                clean(r.motherId),
+                clean(r.motherName),
+                clean(spouse),
+                clean(age),
+                clean(r.mobile),
+                clean(r.lmpDate),
+                clean(r.eddDate),
+                clean(address),
+                clean(r.subCenter),
+                clean(r.deliveryStatus || r.status || 'Pending'),
+                clean(r.deliveryMode),
+                clean(r.babyGender || r.abortionReason || ''),
+                clean(remarks)
+            ].join(',');
+        });
+        return [headers.join(','), ...rows].join('\n');
+    };
+
+    const handleDownload = async (records, filenameTitle) => {
+        if (!records || records.length === 0) {
+            alert("No records to generate report.");
+            return;
+        }
+
+        const csvContent = generateCSV(records);
+        const fileName = `${filenameTitle}_Report.csv`;
+        const file = new File([csvContent], fileName, { type: 'text/csv' });
+
+        // Share if supported (Mobile)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    title: filenameTitle,
+                    text: `Here is the ${filenameTitle} report.`,
+                    files: [file]
+                });
+                return;
+            } catch (err) {
+                console.log("Share failed or cancelled, falling back to download", err);
+            }
+        }
+
+        // Fallback to Download (Browser/Desktop)
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handlePhcReport = () => {
+        handleDownload(rawRecords, `PHC_${stats.monthName.replace(' ', '_')}`);
+    };
+
+    const handleSubCenterReport = (scName) => {
+        const filtered = rawRecords.filter(r => (r.subCenter || 'Unknown') === scName);
+        handleDownload(filtered, `SC_${scName.replace(/ /g, '_')}_${stats.monthName.replace(' ', '_')}`);
+        setScModalOpen(false);
+    };
+
     return (
         <div className="animate-enter">
             {/* ... (Previous Sections Unchanged) ... */}
@@ -56,22 +137,24 @@ const PhcMonthlyDashboard = ({ data }) => {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="progress-track">
-                    <div className="progress-fill" style={{ width: `${(stats.pending / stats.total) * 100}%` }}></div>
+                <div className="progress-track" style={{ display: 'flex', overflow: 'hidden', background: 'rgba(255,255,255,0.1)' }}>
+                    <div className="progress-fill" style={{ width: `${(stats.pending / stats.total) * 100}%`, background: '#FFC107', borderRadius: '0' }}></div>
+                    <div className="progress-fill" style={{ width: `${(stats.delivered / stats.total) * 100}%`, background: '#2196F3', borderRadius: '0' }}></div>
+                    <div className="progress-fill" style={{ width: `${(stats.aborted / stats.total) * 100}%`, background: '#F44336', borderRadius: '0' }}></div>
                 </div>
 
                 <div className="summary-stats-grid">
                     <div className="summary-stat-item">
                         <span className="summary-val">{stats.pending}</span>
-                        <span className="summary-label"><div className="dot pending"></div> Pending</span>
+                        <span className="summary-label"><div className="dot" style={{ background: '#FFC107' }}></div> Pending</span>
                     </div>
                     <div className="summary-stat-item">
                         <span className="summary-val">{stats.delivered}</span>
-                        <span className="summary-label"><div className="dot delivered"></div> Delivered</span>
+                        <span className="summary-label"><div className="dot" style={{ background: '#2196F3' }}></div> Delivered</span>
                     </div>
                     <div className="summary-stat-item">
                         <span className="summary-val">{stats.aborted}</span>
-                        <span className="summary-label"><div className="dot aborted"></div> Aborted</span>
+                        <span className="summary-label"><div className="dot" style={{ background: '#F44336' }}></div> Aborted</span>
                     </div>
                 </div>
             </div>
@@ -196,7 +279,74 @@ const PhcMonthlyDashboard = ({ data }) => {
                     </span>
                 </div>
             </div>
-        </div>
+
+            {/* --- REPORTS SECTION --- */}
+            <div className="section-header-row">
+                <div className="section-title">Reports</div>
+                <div className="section-badge">Export CSV</div>
+            </div>
+
+            <div className="details-card-dark" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <button
+                    className="neu-btn"
+                    style={{ height: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={handlePhcReport}
+                >
+                    <MaterialIcon name="description" size={20} style={{ marginBottom: '4px' }} />
+                    <span style={{ fontSize: '0.8rem' }}>PHC Report</span>
+                </button>
+                <button
+                    className="neu-btn"
+                    style={{ height: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={() => setScModalOpen(true)}
+                >
+                    <MaterialIcon name="domain" size={20} style={{ marginBottom: '4px' }} />
+                    <span style={{ fontSize: '0.8rem' }}>Sub-Center</span>
+                </button>
+            </div>
+
+            {/* --- SC SELECTION MODAL --- */}
+            {scModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.6)', zIndex: 9999,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(5px)'
+                }} onClick={() => setScModalOpen(false)}>
+                    <div className="glass-card animate-pop"
+                        style={{ width: '90%', maxWidth: '350px', maxHeight: '70vh', display: 'flex', flexDirection: 'column', padding: '0', overflow: 'hidden' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div style={{ padding: '16px', borderBottom: '1px solid var(--neu-border-color)', background: 'var(--neu-bg)' }}>
+                            <h3 style={{ margin: 0 }}>Select Sub-Center</h3>
+                        </div>
+                        <div style={{ overflowY: 'auto', padding: '16px', display: 'grid', gap: '10px' }}>
+                            {subCenters && subCenters.length > 0 ? (
+                                subCenters.map(sc => (
+                                    <button
+                                        key={sc.name}
+                                        className="neu-btn"
+                                        style={{ justifyContent: 'space-between', padding: '12px' }}
+                                        onClick={() => handleSubCenterReport(sc.name)}
+                                    >
+                                        <span>{sc.name}</span>
+                                        <MaterialIcon name="download" size={18} />
+                                    </button>
+                                ))
+                            ) : (
+                                <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No Sub-Centers Found</p>
+                            )}
+                        </div>
+                        <div style={{ padding: '12px', borderTop: '1px solid var(--neu-border-color)' }}>
+                            <button className="neu-btn" style={{ width: '100%', color: 'var(--error-color)' }} onClick={() => setScModalOpen(false)}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div >
     );
 };
 

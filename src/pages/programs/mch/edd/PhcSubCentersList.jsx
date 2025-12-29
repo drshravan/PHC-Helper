@@ -20,9 +20,8 @@ const PhcSubCentersList = ({ centers }) => {
     ];
 
     const handleScClick = (scName) => {
-        // Transform "Malkapur(SC)" -> "malkapur-sc" logic for URL
-        const slug = scName.toLowerCase().replace('(', '-').replace(')', '').replace(/\s+/g, '-');
-        navigate(`/programs/mch/edd-vs-deliveries/${monthId}/${slug}`);
+        // Use encodeURIComponent to preserve exact name for DB query
+        navigate(`/programs/mch/edd-vs-deliveries/${monthId}/${encodeURIComponent(scName)}`);
     };
 
     return (

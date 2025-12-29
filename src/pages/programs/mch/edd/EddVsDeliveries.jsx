@@ -9,35 +9,190 @@ const EddVsDeliveries = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' or 'entries'
 
-    // --- Entries Tab State ---
+    // --- DASHBOARD STATE ---
+    const [dashboardData, setDashboardData] = useState([]);
+    const [loadingDashboard, setLoadingDashboard] = useState(true);
+
+    // --- ENTRIES STATE ---
     const [isLocked, setIsLocked] = useState(true);
     const [pin, setPin] = useState(['', '', '', '']);
     const pinRefs = [useRef(), useRef(), useRef(), useRef()];
 
-    // --- Mock Data for Dashboard Tab ---
-    const monthsData = [
-        { month: 'March', year: '2026', total: 58, stats: { normal: 0, lscs: 0, abortions: 0, govt: 0, private: 0 } },
-        { month: 'February', year: '2026', total: 40, stats: { normal: 0, lscs: 0, abortions: 0, govt: 0, private: 0 } },
-        { month: 'January', year: '2026', total: 53, stats: { normal: 0, lscs: 0, abortions: 0, govt: 0, private: 0 } },
-    ];
+    // --- UPLOAD STATE ---
+    const [importText, setImportText] = useState('');
+    const [parsedData, setParsedData] = useState([]);
+    const [previewMode, setPreviewMode] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState(null);
 
+    // --- DELETE MODAL STATE ---
+    const [deleteModal, setDeleteModal] = useState({ visible: false, monthId: null, monthTitle: '', step: 'confirm' });
+    const [modalPin, setModalPin] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // --- LONG PRESS LOGIC ---
+    const longPressTimer = useRef(null);
+    const isLongPress = useRef(false);
+
+    const startPress = (month) => {
+        isLongPress.current = false;
+        longPressTimer.current = setTimeout(() => {
+            isLongPress.current = true;
+            setDeleteModal({ visible: true, monthId: month.id, monthTitle: month.title, step: 'confirm' });
+            setModalPin('');
+            // Vibrate if on mobile
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 600);
+    };
+
+    const cancelPress = () => {
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+    };
+
+    const handleCardClick = (monthId) => {
+        if (isLongPress.current) return;
+        navigate(`/programs/mch/edd-vs-deliveries/${monthId}`);
+    };
+
+    const handleDeleteMonth = async () => {
+        if (!deleteModal.monthId) return;
+        setIsDeleting(true);
+        try {
+            const { db } = await import('../../../../firebase');
+            const { collection, query, where, getDocs, writeBatch } = await import('firebase/firestore');
+
+            // 1. Get all records for this monthGroup
+            const q = query(collection(db, 'anc_records'), where('monthGroup', '==', deleteModal.monthId));
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                alert("No records found to delete.");
+                setDeleteModal({ visible: false, monthId: null, monthTitle: '', step: 'confirm' });
+                setIsDeleting(false);
+                return;
+            }
+
+            // 2. Batch Delete (Batches of 500)
+            const batch = writeBatch(db);
+            snapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+
+            await batch.commit();
+
+            // 3. Close Modal
+            setDeleteModal({ visible: false, monthId: null, monthTitle: '', step: 'confirm' });
+        } catch (error) {
+            console.error("Delete Error", error);
+            alert("Failed to delete records.");
+        } finally {
+            setIsDeleting(false);
+            setModalPin('');
+        }
+    };
+
+    const verifyAndExpandDelete = () => {
+        if (modalPin === '1234') {
+            handleDeleteMonth();
+        } else {
+            alert("Incorrect PIN");
+            setModalPin('');
+        }
+    };
+
+    // --- EFFECT: Load Dashboard Data ---
+    useEffect(() => {
+        const loadDashboard = async () => {
+            try {
+                const { db } = await import('../../../../firebase');
+                const { collection, onSnapshot, query, where, getDocs, writeBatch } = await import('firebase/firestore');
+
+                const q = query(collection(db, "anc_records"));
+
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const tempMap = {};
+
+                    snapshot.docs.forEach(doc => {
+                        const data = doc.data();
+                        const mGroup = data.monthGroup; // "jan-2026"
+
+                        if (!mGroup) return;
+
+                        if (!tempMap[mGroup]) {
+                            const parts = mGroup.split('-');
+                            const cleanTitle = parts[0].charAt(0).toUpperCase() + parts[0].slice(1) + " " + parts[1];
+
+                            tempMap[mGroup] = {
+                                id: mGroup,
+                                title: cleanTitle,
+                                total: 0,
+                                pending: 0,
+                                delivered: 0,
+                                aborted: 0,
+                                highRisk: 0,
+                                sortDate: new Date(data.eddDate || 0)
+                            };
+                        }
+
+                        // Aggregation
+                        tempMap[mGroup].total++;
+
+                        const status = data.deliveryStatus || data.status || 'Pending';
+
+                        if (status === 'Pending') tempMap[mGroup].pending++;
+                        else if (status === 'Delivered') tempMap[mGroup].delivered++;
+                        else if (status === 'Aborted') tempMap[mGroup].aborted++;
+
+                        // Fallback: If status is 'Pending' but user just imported, it counts here.
+
+                        // Detailed Stats for UI
+                        if (status === 'Delivered') {
+                            const mode = data.deliveryMode || 'Normal';
+                            if (mode === 'Normal') tempMap[mGroup].normal = (tempMap[mGroup].normal || 0) + 1;
+                            else if (mode === 'LSCS') tempMap[mGroup].lscs = (tempMap[mGroup].lscs || 0) + 1;
+
+                            const fac = (data.facilityType || '').toLowerCase();
+                            if (fac === 'govt' || fac === 'government') tempMap[mGroup].govt = (tempMap[mGroup].govt || 0) + 1;
+                            else if (fac === 'pvt' || fac === 'private') tempMap[mGroup].pvt = (tempMap[mGroup].pvt || 0) + 1;
+                        }
+
+                        // Aborted is separately tracked above
+
+                    });
+
+                    const finalArr = Object.values(tempMap).sort((a, b) => a.sortDate - b.sortDate);
+                    setDashboardData(finalArr);
+                    setLoadingDashboard(false);
+                });
+
+                return () => unsubscribe();
+            } catch (err) {
+                console.error("Dashboard Load Error", err);
+                setLoadingDashboard(false);
+            }
+        };
+
+        if (activeTab === 'dashboard') {
+            loadDashboard();
+        }
+    }, [activeTab]);
 
     // --- PIN Logic ---
     const handlePinChange = (index, value) => {
         if (!/^\d*$/.test(value)) return;
-
         const newPin = [...pin];
         newPin[index] = value;
         setPin(newPin);
 
-        // Auto-focus next input
         if (value && index < 3) {
             pinRefs[index + 1].current.focus();
         }
 
-        // Checklist check
         if (newPin.join('') === '1234') {
-            setTimeout(() => setIsLocked(false), 300); // Small delay for visual feedback
+            setTimeout(() => setIsLocked(false), 300);
         }
     };
 
@@ -47,65 +202,265 @@ const EddVsDeliveries = () => {
         }
     };
 
+    // --- Parsing Logic ---
+    const handlePreview = () => {
+        if (!importText.trim()) return;
+        const lines = importText.split('\n').filter(line => line.trim() !== '');
+
+        let headerIndex = -1;
+        const requiredHeaders = ["MotherId", "SubCenter", "Mother Name", "EDD Date"];
+
+        for (let i = 0; i < lines.length; i++) {
+            const row = lines[i].split('\t').map(cell => cell.trim());
+            const hasHeaders = requiredHeaders.every(h => row.some(cell => cell.toLowerCase().includes(h.toLowerCase())));
+            if (hasHeaders) {
+                headerIndex = i;
+                break;
+            }
+        }
+
+        if (headerIndex === -1) {
+            alert("Invalid Format! Could not find headers: MotherId, SubCenter, Mother Name, EDD Date");
+            return;
+        }
+
+        const headers = lines[headerIndex].split('\t').map(h => h.trim());
+        const getIdx = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+
+        const idxMap = {
+            sNo: getIdx("S.No"),
+            motherId: getIdx("MotherId"),
+            district: getIdx("District"),
+            phc: getIdx("Phc"),
+            subCenter: getIdx("SubCenter"),
+            motherName: getIdx("Mother Name"),
+            mobile: getIdx("Mobile"),
+            eddDate: getIdx("EDD Date")
+        };
+
+        if (idxMap.motherId === -1 || idxMap.eddDate === -1) {
+            alert("Critial headers missing (MotherId or EDD Date).");
+            return;
+        }
+
+        const data = [];
+        const seenIds = new Set();
+        const duplicates = [];
+
+        for (let i = headerIndex + 1; i < lines.length; i++) {
+            const row = lines[i].split('\t').map(cell => cell.trim());
+            if (row.length < 5) continue;
+
+            const mId = row[idxMap.motherId];
+            if (!mId) continue;
+
+            if (seenIds.has(mId)) {
+                duplicates.push(mId);
+                continue;
+            }
+            seenIds.add(mId);
+
+            const rawDate = row[idxMap.eddDate];
+            let isoDate = "";
+            let monthGroup = "";
+
+            if (rawDate) {
+                const parts = rawDate.split('/');
+                if (parts.length === 3) {
+                    const d = parts[0].padStart(2, '0');
+                    const m = parts[1].padStart(2, '0');
+                    const y = parts[2];
+                    isoDate = `${y}-${m}-${d}`;
+                    try {
+                        const dateObj = new Date(isoDate);
+                        monthGroup = dateObj.toLocaleString('default', { month: 'short' }).toLowerCase() + '-' + y;
+                    } catch (e) { console.error("Date parse error", e); }
+                }
+            }
+
+            // Default facility type guessing logic (optional)
+            // or we assume user enters it in Edit Record later.
+            // Import sets status Pending so facility/mode are empty initially.
+
+            const obj = {
+                motherId: mId,
+                sNo: idxMap.sNo > -1 ? row[idxMap.sNo] : "",
+                district: idxMap.district > -1 ? row[idxMap.district] : "",
+                phc: idxMap.phc > -1 ? row[idxMap.phc] : "",
+                subCenter: row[idxMap.subCenter] || "Unknown",
+                motherName: row[idxMap.motherName] || "Unknown",
+                mobile: idxMap.mobile > -1 ? row[idxMap.mobile] : "",
+                eddDate: isoDate,
+                monthGroup: monthGroup,
+                deliveryStatus: 'Pending',
+                isHighRisk: false,
+                highRiskTypes: [],
+                anmName: "",
+                anmMobile: "",
+                ashaName: "",
+                ashaMobile: "",
+                gestationalWeek: 0,
+                createdAt: new Date().toISOString()
+            };
+            data.push(obj);
+        }
+
+        if (data.length === 0) {
+            alert("No valid data rows found.");
+            return;
+        }
+        if (duplicates.length > 0) {
+            alert(`Found ${duplicates.length} duplicate IDs. These were skipped.`);
+        }
+
+        setParsedData(data);
+        setPreviewMode(true);
+    };
+
+    const handleUpload = async () => {
+        setUploading(true);
+        let successCount = 0;
+        let failCount = 0;
+        let skippedCount = 0;
+
+        try {
+            const { db } = await import('../../../../firebase');
+            const { doc, getDoc, setDoc } = await import('firebase/firestore');
+
+            const uploadPromises = parsedData.map(async (item) => {
+                const docRef = doc(db, "anc_records", item.motherId);
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        skippedCount++;
+                        return;
+                    }
+                    await setDoc(docRef, item);
+                    successCount++;
+                } catch (err) {
+                    console.error("Error uploading", item.motherId, err);
+                    failCount++;
+                }
+            });
+
+            await Promise.all(uploadPromises);
+
+            let msg = `Upload Complete!\nAllowed (New): ${successCount}`;
+            if (skippedCount > 0) msg += `\nSkipped (Duplicate IDs): ${skippedCount}`;
+            if (failCount > 0) msg += `\nFailed: ${failCount}`;
+            alert(msg);
+
+            setUploadStatus(failCount === 0 ? 'success' : 'error');
+            if (successCount > 0) {
+                setParsedData([]);
+                setImportText('');
+                setPreviewMode(false);
+            }
+            setTimeout(() => setUploadStatus(null), 3000);
+
+        } catch (error) {
+            console.error("Upload Critical Error:", error);
+            alert("Upload Failed: " + error.message);
+            setUploadStatus('error');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    // --- RENDER HELPERS ---
     const renderDashboardTab = () => (
-        <div className="edds-list animate-enter">
-            {monthsData.map((data, index) => (
-                <GlassCard
-                    key={index}
-                    className="month-card modern-card"
-                    onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${data.month.toLowerCase().substring(0, 3)}-${data.year}`)}
-                    hoverEffect={true}
-                >
-                    {/* Header */}
-                    <div className="month-header-modern">
-                        <div>
-                            <span className="month-name-large">{data.month}</span>
-                            <span className="year-label">{data.year}</span>
-                        </div>
-                        <div className="total-badge-modern">
-                            <span className="badge-label">TOTAL EDDS</span>
-                            <span className="badge-value">{data.total}</span>
-                        </div>
-                    </div>
+        <div className="edd-dashboard animate-enter">
+            {loadingDashboard ? (
+                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-secondary)' }}>Loading Dashboard...</div>
+            ) : dashboardData.length === 0 ? (
+                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <MaterialIcon name="folder_open" size={48} style={{ opacity: 0.5, marginBottom: 10 }} />
+                    <p>No Records Found</p>
+                    <small>Import data in "Entries" tab</small>
+                </div>
+            ) : (
+                dashboardData.map(month => {
+                    // Extract Month Name and Year for new Header Style
+                    const [mName, mYear] = month.title.split(' ');
 
-                    {/* Outcome Row (Compact) */}
-                    <div className="section-label" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '8px' }}>OUTCOME</div>
-                    <div className="stats-compact-row">
-                        <div className="stat-pill">
-                            <div className="stat-pill-icon normal"><MaterialIcon name="child_care" size={18} /></div>
-                            <span className="stat-val">{data.stats.normal}</span>
-                            <span className="stat-lbl">Normal</span>
-                        </div>
-                        <div className="stat-pill">
-                            <div className="stat-pill-icon lscs"><MaterialIcon name="medical_services" size={18} /></div>
-                            <span className="stat-val">{data.stats.lscs}</span>
-                            <span className="stat-lbl">LSCS</span>
-                        </div>
-                        <div className="stat-pill">
-                            <div className="stat-pill-icon abort"><MaterialIcon name="cancel" size={18} /></div>
-                            <span className="stat-val">{data.stats.abortions}</span>
-                            <span className="stat-lbl">Abortions</span>
-                        </div>
-                    </div>
+                    return (
 
-                    <div className="section-divider"></div>
+                        <div
+                            key={month.id}
+                            className="month-card modern-card"
+                            onMouseDown={() => startPress(month)}
+                            onMouseUp={cancelPress}
+                            onMouseLeave={cancelPress}
+                            onTouchStart={() => startPress(month)}
+                            onTouchEnd={cancelPress}
+                            onContextMenu={(e) => e.preventDefault()}
+                            onClick={() => handleCardClick(month.id)}
+                            style={{ cursor: 'pointer', userSelect: 'none', position: 'relative' }}
+                        >
 
-                    {/* Facility Row (Compact) */}
-                    <div className="section-label" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '8px' }}>FACILITY</div>
-                    <div className="stats-compact-row">
-                        <div className="stat-pill">
-                            <div className="stat-pill-icon govt"><MaterialIcon name="account_balance" size={18} /></div>
-                            <span className="stat-val">{data.stats.govt}</span>
-                            <span className="stat-lbl">Govt</span>
+                            {/* Header: Month Year | Total Badge */}
+                            <div className="month-header-modern">
+                                <div>
+                                    <span className="month-name-large">{mName}</span>
+                                    <span className="year-label">{mYear}</span>
+                                </div>
+                                <div className="total-badge-modern">
+                                    <span className="badge-label">Total EDDs</span>
+                                    <span className="badge-value">{month.total}</span>
+                                </div>
+                            </div>
+
+                            {/* Outcome Section */}
+                            <div className="stat-section-label">OUTCOME</div>
+                            <div className="stats-compact-row">
+                                <div className="stat-pill">
+                                    <div className="stat-pill-icon normal">
+                                        <MaterialIcon name="sentiment_satisfied" />
+                                    </div>
+                                    <div className="stat-val">{month.normal || 0}</div>
+                                    <div className="stat-lbl">Normal</div>
+                                </div>
+                                <div className="stat-pill">
+                                    <div className="stat-pill-icon lscs">
+                                        <MaterialIcon name="medical_services" />
+                                    </div>
+                                    <div className="stat-val">{month.lscs || 0}</div>
+                                    <div className="stat-lbl">LSCS</div>
+                                </div>
+                                <div className="stat-pill">
+                                    <div className="stat-pill-icon abort">
+                                        <MaterialIcon name="cancel" />
+                                    </div>
+                                    <div className="stat-val">{month.aborted || 0}</div>
+                                    <div className="stat-lbl">Abortions</div>
+                                </div>
+                            </div>
+
+                            <div className="section-divider"></div>
+
+                            {/* Facility Section */}
+                            <div className="stat-section-label">FACILITY</div>
+                            <div className="stats-compact-row" style={{ justifyContent: 'flex-start', gap: '16px' }}>
+                                <div className="stat-pill">
+                                    <div className="stat-pill-icon govt">
+                                        <MaterialIcon name="account_balance" />
+                                    </div>
+                                    <div className="stat-val">{month.govt || 0}</div>
+                                    <div className="stat-lbl">Govt</div>
+                                </div>
+                                <div className="stat-pill">
+                                    <div className="stat-pill-icon pvt">
+                                        <MaterialIcon name="local_hospital" />
+                                    </div>
+                                    <div className="stat-val">{month.pvt || 0}</div>
+                                    <div className="stat-lbl">Private</div>
+                                </div>
+                            </div>
+
                         </div>
-                        <div className="stat-pill">
-                            <div className="stat-pill-icon pvt"><MaterialIcon name="local_hospital" size={18} /></div>
-                            <span className="stat-val">{data.stats.private}</span>
-                            <span className="stat-lbl">Private</span>
-                        </div>
-                    </div>
-                </GlassCard>
-            ))}
+                    )
+                })
+            )}
         </div>
     );
 
@@ -114,7 +469,6 @@ const EddVsDeliveries = () => {
             <MaterialIcon name="lock" className="lock-icon" />
             <h2 className="lock-title">Restricted Access</h2>
             <p className="lock-subtitle">Enter PIN to access Data Entry</p>
-
             <div className="pin-inputs">
                 {pin.map((digit, index) => (
                     <input
@@ -133,113 +487,6 @@ const EddVsDeliveries = () => {
         </div>
     );
 
-    // --- Import & Upload State ---
-    const [importText, setImportText] = useState('');
-    const [parsedData, setParsedData] = useState([]);
-    const [previewMode, setPreviewMode] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState(null); // 'success' | 'error'
-
-    // --- Parsing Logic ---
-    const handlePreview = () => {
-        if (!importText.trim()) return;
-
-        const lines = importText.split('\n').filter(line => line.trim() !== '');
-
-        // Find Header Row (Metadata might be present at top)
-        let headerIndex = -1;
-        const requiredHeaders = ["S.No", "MotherId", "District", "Phc", "SubCenter", "Mother Name", "Mobile", "EDD Date"];
-
-        for (let i = 0; i < lines.length; i++) {
-            // Excel copy-paste uses tabs. We split by tab.
-            const row = lines[i].split('\t').map(cell => cell.trim());
-
-            // Check if this row contains all required headers
-            const hasAllHeaders = requiredHeaders.every(h => row.includes(h));
-            if (hasAllHeaders) {
-                headerIndex = i;
-                break;
-            }
-        }
-
-        if (headerIndex === -1) {
-            alert("Invalid Format! Could not find the required table headers: " + requiredHeaders.join(", "));
-            return;
-        }
-
-        // Map Headers to indices
-        const headers = lines[headerIndex].split('\t').map(h => h.trim());
-        const headerMap = {};
-        requiredHeaders.forEach(req => {
-            headerMap[req] = headers.indexOf(req);
-        });
-
-        // Parse Rows
-        const data = [];
-        for (let i = headerIndex + 1; i < lines.length; i++) {
-            const row = lines[i].split('\t').map(cell => cell.trim());
-            // Skip invalid/empty rows
-            if (row.length < requiredHeaders.length) continue;
-
-            // Construct Object
-            const obj = {
-                sNo: row[headerMap["S.No"]],
-                motherId: row[headerMap["MotherId"]],
-                district: row[headerMap["District"]],
-                phc: row[headerMap["Phc"]],
-                subCenter: row[headerMap["SubCenter"]],
-                motherName: row[headerMap["Mother Name"]],
-                mobile: row[headerMap["Mobile"]],
-                eddDate: row[headerMap["EDD Date"]],
-                status: 'Pending' // Default status
-            };
-            data.push(obj);
-        }
-
-        if (data.length === 0) {
-            alert("No valid data rows found after the header.");
-            return;
-        }
-
-        setParsedData(data);
-        setPreviewMode(true);
-    };
-
-    const handleUpload = async () => {
-        setUploading(true);
-        // Here we would normally import { db } from '../../../firebase' and addDoc
-        // Since I cannot modify external files safely in this step, I will mock the alert or you can uncomment below.
-
-        try {
-            // Dynamically import to avoid build errors if file missing
-            const { db } = await import('../../../../firebase');
-            const { collection, addDoc } = await import('firebase/firestore');
-
-            const batchPromises = parsedData.map(item => {
-                return addDoc(collection(db, "edd_entries"), {
-                    ...item,
-                    createdAt: new Date()
-                });
-            });
-
-            await Promise.all(batchPromises);
-
-            setUploadStatus('success');
-            setParsedData([]);
-            setImportText('');
-            setPreviewMode(false);
-            setTimeout(() => setUploadStatus(null), 3000);
-            alert("Successfully uploaded " + parsedData.length + " records to Firebase!");
-
-        } catch (error) {
-            console.error("Upload Error:", error);
-            alert("Upload Failed: " + error.message);
-            setUploadStatus('error');
-        } finally {
-            setUploading(false);
-        }
-    };
-
     const renderImportScreen = () => {
         if (previewMode) {
             return (
@@ -256,7 +503,7 @@ const EddVsDeliveries = () => {
                             </thead>
                             <tbody>
                                 {parsedData.map((row, idx) => (
-                                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <tr key={idx} style={{ borderBottom: '1px solid var(--neu-border-color)' }}>
                                         <td style={{ padding: '8px' }}>{row.sNo}</td>
                                         <td style={{ padding: '8px' }}>{row.motherId}</td>
                                         <td style={{ padding: '8px', fontWeight: 'bold' }}>{row.motherName}</td>
@@ -270,7 +517,7 @@ const EddVsDeliveries = () => {
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                        <button className="neu-btn" onClick={() => setPreviewMode(false)} style={{ flex: 1, color: '#f44336' }}>
+                        <button className="neu-btn" onClick={() => setPreviewMode(false)} style={{ flex: 1, color: 'var(--error-color)' }}>
                             Cancel
                         </button>
                         <button className="preview-btn" onClick={handleUpload} disabled={uploading}>
@@ -310,8 +557,90 @@ const EddVsDeliveries = () => {
         );
     };
 
+    const renderDeleteModal = () => {
+        if (!deleteModal.visible) return null;
+
+        const isPinStep = deleteModal.step === 'pin';
+
+        return (
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.6)', zIndex: 9999,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backdropFilter: 'blur(5px)'
+            }}>
+                <div className="glass-card animate-pop" style={{ width: '90%', maxWidth: '350px', padding: '24px', border: '1px solid rgba(255,50,50,0.3)' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                        <div style={{
+                            width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,50,50,0.1)',
+                            color: '#ff4444', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 16px auto'
+                        }}>
+                            <MaterialIcon name="delete_forever" size={32} />
+                        </div>
+                        <h3 style={{ color: '#fff', margin: '0 0 8px 0' }}>{isPinStep ? "Enter PIN" : "Delete Records?"}</h3>
+                        {!isPinStep ? (
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+                                This will permanently delete ALL records for <strong>{deleteModal.monthTitle}</strong>.
+                                This action cannot be undone.
+                            </p>
+                        ) : (
+                            <div style={{ marginTop: '15px' }}>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '10px' }}>
+                                    Enter security PIN to confirm deletion.
+                                </p>
+                                <input
+                                    type="password"
+                                    pattern="[0-9]*"
+                                    inputMode="numeric"
+                                    className="green-input"
+                                    style={{ textAlign: 'center', letterSpacing: '8px', fontSize: '1.2rem', fontWeight: 'bold' }}
+                                    maxLength={4}
+                                    placeholder="••••"
+                                    value={modalPin}
+                                    onChange={(e) => setModalPin(e.target.value)}
+                                    autoFocus
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                            className="neu-btn"
+                            style={{ flex: 1 }}
+                            onClick={() => setDeleteModal({ visible: false, monthId: null, monthTitle: '', step: 'confirm' })}
+                            disabled={isDeleting}
+                        >
+                            Cancel
+                        </button>
+                        {!isPinStep ? (
+                            <button
+                                className="neu-btn"
+                                style={{ flex: 1, background: 'rgba(255,50,50,0.15)', color: '#ff4444', border: '1px solid rgba(255,50,50,0.3)' }}
+                                onClick={() => setDeleteModal(prev => ({ ...prev, step: 'pin' }))}
+                            >
+                                Continue
+                            </button>
+                        ) : (
+                            <button
+                                className="neu-btn"
+                                style={{ flex: 1, background: 'rgba(255,50,50,0.15)', color: '#ff4444', border: '1px solid rgba(255,50,50,0.3)' }}
+                                onClick={verifyAndExpandDelete}
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? 'Deleting...' : 'Confirm'}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="home-wrapper edd-container">
+            {renderDeleteModal()}
             <PageHeader
                 title="EDD & Deliveries"
                 backPath="/programs/mch"

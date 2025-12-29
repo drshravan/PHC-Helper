@@ -1,17 +1,20 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "REPLACE_WITH_YOUR_API_KEY",
+    apiKey: "AIzaSyCc8qXPZPm27RTM7xgsSRLNeeltNzU5qfg",
     authDomain: "my-phc-helper-shravan.firebaseapp.com",
     projectId: "my-phc-helper-shravan",
     storageBucket: "my-phc-helper-shravan.firebasestorage.app",
     messagingSenderId: "120748976198",
-    appId: "REPLACE_WITH_YOUR_APP_ID"
+    appId: "1:120748976198:web:989332a7f7aa58c0764247",
+    measurementId: "G-9FSPZS7G5K"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+const db = getFirestore(app);
+const analytics = getAnalytics(app);
+
+export { db, analytics };

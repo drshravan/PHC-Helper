@@ -24,7 +24,7 @@
 /* === TOP SUMMARY CARD === */
 .summary-card-dark {
     background: var(--neu-bg);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
     border-radius: 20px;
     padding: 24px;
     margin-bottom: 24px;
@@ -66,7 +66,7 @@
     border-radius: 6px;
     margin-bottom: 20px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--neu-border-color);
 }
 
 .progress-fill {
@@ -161,7 +161,7 @@
 /* === DARK CONTAINER CARDS === */
 .details-card-dark {
     background: var(--neu-bg);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
     border-radius: 20px;
     padding: 20px;
     box-shadow: var(--shadow-flat);
@@ -186,7 +186,7 @@
     justify-content: center;
     box-shadow: var(--shadow-pressed);
     /* Sunken block */
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--neu-border-color);
 }
 
 .stats-block-val {
@@ -262,7 +262,7 @@
     align-items: center;
     margin-top: 20px;
     padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--neu-border-color);
 }
 
 .footer-lbl {
@@ -279,11 +279,10 @@
 /* === SUB-CENTERS LIST ITEMS === */
 .sc-card {
     background: var(--neu-bg);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neu-border-color);
     border-radius: 16px;
     padding: 16px;
-    margin-bottom: 16px;
-    margin-bottom: 16px;
+    margin-bottom: 28px;
     box-shadow: var(--shadow-flat);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -325,7 +324,7 @@
     justify-content: center;
     box-shadow: var(--shadow-pressed);
     /* Sunken effect */
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--neu-border-color);
 }
 
 .sc-val {
