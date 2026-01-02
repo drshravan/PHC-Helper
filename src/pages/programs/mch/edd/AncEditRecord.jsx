@@ -90,7 +90,6 @@ const AncEditRecord = () => {
         pvtFacilityReason: "",
         abortionReason: "",
         gestationalWeeks: 0,
-        gestationalWeeks: 0,
         gestationalDays: 0,
         birthPlanning: "CHC Ghanpur Station"
     });
