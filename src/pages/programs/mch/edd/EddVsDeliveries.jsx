@@ -262,6 +262,7 @@ const EddVsDeliveries = () => {
 
             const rawDate = row[idxMap.eddDate];
             let isoDate = "";
+            let lmpDate = "";
             let monthGroup = "";
 
             if (rawDate) {
@@ -274,6 +275,14 @@ const EddVsDeliveries = () => {
                     try {
                         const dateObj = new Date(isoDate);
                         monthGroup = dateObj.toLocaleString('default', { month: 'short' }).toLowerCase() + '-' + y;
+
+                        // Calculate LMP: EDD - 280 days
+                        const lmpObj = new Date(dateObj);
+                        lmpObj.setDate(dateObj.getDate() - 280);
+                        const lYear = lmpObj.getFullYear();
+                        const lMonth = String(lmpObj.getMonth() + 1).padStart(2, '0');
+                        const lDay = String(lmpObj.getDate()).padStart(2, '0');
+                        lmpDate = `${lYear}-${lMonth}-${lDay}`;
                     } catch (e) { console.error("Date parse error", e); }
                 }
             }
@@ -290,6 +299,7 @@ const EddVsDeliveries = () => {
                 subCenter: row[idxMap.subCenter] || "Unknown",
                 motherName: row[idxMap.motherName] || "Unknown",
                 mobile: idxMap.mobile > -1 ? row[idxMap.mobile] : "",
+                lmpDate: lmpDate,
                 eddDate: isoDate,
                 monthGroup: monthGroup,
                 deliveryStatus: 'Pending',
@@ -496,7 +506,7 @@ const EddVsDeliveries = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-primary)', fontSize: '0.8rem' }}>
                             <thead style={{ background: 'var(--neu-bg)', position: 'sticky', top: 0 }}>
                                 <tr>
-                                    {["S.No", "ID", "Name", "Mobile", "EDD", "SubCenter"].map(h => (
+                                    {["S.No", "ID", "Name", "Mobile", "LMP", "EDD", "SubCenter"].map(h => (
                                         <th key={h} style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid var(--neu-border-color)' }}>{h}</th>
                                     ))}
                                 </tr>
@@ -508,6 +518,7 @@ const EddVsDeliveries = () => {
                                         <td style={{ padding: '8px' }}>{row.motherId}</td>
                                         <td style={{ padding: '8px', fontWeight: 'bold' }}>{row.motherName}</td>
                                         <td style={{ padding: '8px' }}>{row.mobile}</td>
+                                        <td style={{ padding: '8px', color: 'var(--accent-primary)' }}>{row.lmpDate}</td>
                                         <td style={{ padding: '8px', color: 'var(--accent-primary)' }}>{row.eddDate}</td>
                                         <td style={{ padding: '8px' }}>{row.subCenter}</td>
                                     </tr>

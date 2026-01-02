@@ -88,7 +88,9 @@ const AncEditRecord = () => {
         facilityName: "",
         facilityAddress: "",
         pvtFacilityReason: "",
-        abortionReason: ""
+        abortionReason: "",
+        gestationalWeeks: 0,
+        gestationalDays: 0
     });
 
     const [errors, setErrors] = useState({});
@@ -220,12 +222,15 @@ const AncEditRecord = () => {
     // Calculate Weeks
     useEffect(() => {
         let lmpDate = null;
+        let w = 0;
+        let d = 0;
+        let calc = "";
+        let color = "";
 
         // Determine effective LMP
         if (formData.lmpDate) {
             lmpDate = new Date(formData.lmpDate);
         } else if (formData.eddDate) {
-            // Calculate LMP from EDD (EDD - 40 weeks or 280 days)
             const edd = new Date(formData.eddDate);
             if (!isNaN(edd)) {
                 lmpDate = new Date(edd);
@@ -238,14 +243,14 @@ const AncEditRecord = () => {
             if (!isNaN(lmpDate) && !isNaN(del)) {
                 const diffTime = del - lmpDate;
                 if (diffTime < 0) {
-                    setWeeksCalc("Invalid Date (Before Estimated LMP)");
-                    setCalcColor("var(--error-color)");
+                    calc = "Invalid Date (Before Estimated LMP)";
+                    color = "var(--error-color)";
                 } else {
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const w = Math.floor(diffDays / 7);
-                    const d = diffDays % 7;
-                    setWeeksCalc(`${w} Weeks ${d} Days`);
-                    setCalcColor(w < 28 ? "var(--error-color)" : "var(--success-color)");
+                    w = Math.floor(diffDays / 7);
+                    d = diffDays % 7;
+                    calc = `${w} Weeks ${d} Days`;
+                    color = w < 28 ? "var(--error-color)" : "var(--success-color)";
                 }
             }
         } else if (formData.deliveryStatus === 'Aborted' && formData.abortedDate && lmpDate) {
@@ -253,22 +258,27 @@ const AncEditRecord = () => {
             if (!isNaN(lmpDate) && !isNaN(ab)) {
                 const diffTime = ab - lmpDate;
                 if (diffTime < 0) {
-                    setWeeksCalc("Invalid Date (Before Estimated LMP)");
-                    setCalcColor("var(--error-color)");
+                    calc = "Invalid Date (Before Estimated LMP)";
+                    color = "var(--error-color)";
                 } else {
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const w = Math.floor(diffDays / 7);
-                    const d = diffDays % 7;
-                    setWeeksCalc(`${w} Weeks ${d} Days`);
-                    setCalcColor(w > 12 ? "var(--error-color)" : "orange");
+                    w = Math.floor(diffDays / 7);
+                    d = diffDays % 7;
+                    calc = `${w} Weeks ${d} Days`;
+                    color = w > 12 ? "var(--error-color)" : "orange";
                 }
             }
         } else if ((formData.deliveryStatus === 'Aborted' && formData.abortedDate) || (formData.deliveryStatus === 'Delivered' && formData.deliveredDate)) {
-            setWeeksCalc("LMP/EDD Missing - Cannot Calculate");
-            setCalcColor("var(--text-muted)");
-        } else {
-            setWeeksCalc("");
-            setCalcColor("");
+            calc = "LMP/EDD Missing - Cannot Calculate";
+            color = "var(--text-muted)";
+        }
+
+        setWeeksCalc(calc);
+        setCalcColor(color);
+
+        // Persist numerical values to formData
+        if (formData.gestationalWeeks !== w || formData.gestationalDays !== d) {
+            setFormData(prev => ({ ...prev, gestationalWeeks: w, gestationalDays: d }));
         }
     }, [formData.deliveredDate, formData.abortedDate, formData.deliveryStatus, formData.lmpDate, formData.eddDate]);
 
@@ -326,6 +336,7 @@ const AncEditRecord = () => {
         if (formData.anmMobile && !/^\d{10}$/.test(formData.anmMobile)) { newErrors.anmMobile = "Must be 10 digits"; step1Valid = false; }
         if (formData.ashaMobile && !/^\d{10}$/.test(formData.ashaMobile)) { newErrors.ashaMobile = "Must be 10 digits"; step1Valid = false; }
         newStepErrors[1] = !step1Valid;
+        if (!step1Valid) isValid = false;
         if (!step1Valid) isValid = false;
 
         // --- STEP 2 CHECKS ---
@@ -530,9 +541,9 @@ const AncEditRecord = () => {
                             {renderError('anmName')}
                         </div>
                         <div className="input-group">
-                            <label className="input-label">ANM Mobile</label>
+                            <label className="input-label">ANM Mobile <span className="hint-text">(10-digit number required for calls)</span></label>
                             <div className="input-wrapper">
-                                <input type="tel" className={inputErrorClass('anmMobile')} maxLength={10}
+                                <input type="tel" className={inputErrorClass('anmMobile')} maxLength={10} placeholder="Enter ANM mobile number"
                                     value={formData.anmMobile} onChange={(e) => handleChange('anmMobile', e.target.value)} />
                                 <span className="input-suffix">{formData.anmMobile ? formData.anmMobile.length : 0}/10</span>
                             </div>
@@ -544,9 +555,9 @@ const AncEditRecord = () => {
                                 value={formData.ashaName} onChange={(e) => handleChange('ashaName', e.target.value)} />
                         </div>
                         <div className="input-group">
-                            <label className="input-label">ASHA Mobile</label>
+                            <label className="input-label">ASHA Mobile <span className="hint-text">(10-digit number required for calls)</span></label>
                             <div className="input-wrapper">
-                                <input type="tel" className={inputErrorClass('ashaMobile')} maxLength={10}
+                                <input type="tel" className={inputErrorClass('ashaMobile')} maxLength={10} placeholder="Enter ASHA mobile number"
                                     value={formData.ashaMobile} onChange={(e) => handleChange('ashaMobile', e.target.value)} />
                                 <span className="input-suffix">{formData.ashaMobile ? formData.ashaMobile.length : 0}/10</span>
                             </div>
@@ -716,14 +727,14 @@ const AncEditRecord = () => {
                                 </div>
                                 {weeksCalc && (
                                     <div className="calc-box animate-enter" style={{ color: calcColor || 'var(--accent-primary)', borderColor: calcColor || 'var(--accent-primary)' }}>
-                                        <MaterialIcon name="calculate" size={16} /> Calculation: {weeksCalc} from LMP
+                                        <MaterialIcon name="calculate" size={16} /> Duration (Delivered): {weeksCalc} from LMP
                                     </div>
                                 )}
                                 {formData.deliveryMode === 'LSCS' && (
                                     <div className="input-group" style={{ marginTop: '12px' }}>
                                         <label className="input-label">Reason For LSCS</label>
-                                        <input type="text" className="green-input" placeholder="Medical indication..."
-                                            value={formData.lscsReason} onChange={(e) => handleChange('lscsReason', e.target.value)} />
+                                        <textarea className="green-input" rows={2} placeholder="Medical indication..."
+                                            value={formData.lscsReason} onChange={(e) => handleChange('lscsReason', e.target.value)}></textarea>
                                     </div>
                                 )}
                                 <div className="section-title" style={{ marginTop: '20px', fontSize: '0.9rem' }}><MaterialIcon name="local_hospital" size={18} className="title-icon" /> Facility Details</div>
@@ -744,7 +755,8 @@ const AncEditRecord = () => {
                                 {formData.facilityType === 'Pvt' && (
                                     <div className="input-group">
                                         <label className="input-label">Reason for Private</label>
-                                        <input type="text" className="green-input" value={formData.pvtFacilityReason} onChange={(e) => handleChange('pvtFacilityReason', e.target.value)} />
+                                        <textarea className="green-input" rows={2} placeholder="Why private facility?..."
+                                            value={formData.pvtFacilityReason} onChange={(e) => handleChange('pvtFacilityReason', e.target.value)}></textarea>
                                     </div>
                                 )}
                                 <div className="input-group">
@@ -761,13 +773,13 @@ const AncEditRecord = () => {
                                 </div>
                                 {weeksCalc && (
                                     <div className="calc-box animate-enter" style={{ color: calcColor || 'var(--accent-primary)', borderColor: calcColor || 'var(--accent-primary)' }}>
-                                        <MaterialIcon name="calculate" size={16} /> Calculation: {weeksCalc} from LMP
+                                        <MaterialIcon name="calculate" size={16} /> Duration (Aborted): {weeksCalc} from LMP
                                     </div>
                                 )}
                                 <div className="input-group" style={{ marginTop: '12px' }}>
                                     <label className="input-label">Reason for Abortion</label>
-                                    <input type="text" className="green-input" placeholder="Spontaneous / MTP / Other..."
-                                        value={formData.abortionReason} onChange={(e) => handleChange('abortionReason', e.target.value)} />
+                                    <textarea className="green-input" rows={2} placeholder="Spontaneous / MTP / Other..."
+                                        value={formData.abortionReason} onChange={(e) => handleChange('abortionReason', e.target.value)}></textarea>
                                 </div>
                                 <div className="input-group">
                                     <label className="input-label">Facility Type</label>

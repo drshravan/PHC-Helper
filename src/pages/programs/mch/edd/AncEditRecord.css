@@ -277,6 +277,14 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     margin-left: 4px;
 }
 
+.hint-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: normal;
+    font-style: italic;
+    margin-left: 4px;
+}
+
 .input-wrapper {
     position: relative;
     display: flex;
