@@ -90,7 +90,9 @@ const AncEditRecord = () => {
         pvtFacilityReason: "",
         abortionReason: "",
         gestationalWeeks: 0,
-        gestationalDays: 0
+        gestationalWeeks: 0,
+        gestationalDays: 0,
+        birthPlanning: "CHC Ghanpur Station"
     });
 
     const [errors, setErrors] = useState({});
@@ -135,7 +137,8 @@ const AncEditRecord = () => {
                         highRiskTypes: data.highRiskTypes || [],
                         historyDetails: data.historyDetails || [],
                         // Ensure risk is string "Yes"/"No" if stored as boolean (legacy check)
-                        isHighRisk: data.isHighRisk === true || data.isHighRisk === "Yes" ? "Yes" : "No"
+                        isHighRisk: data.isHighRisk === true || data.isHighRisk === "Yes" ? "Yes" : "No",
+                        birthPlanning: data.birthPlanning || "CHC Ghanpur Station"
                     }));
                 } else {
                     alert("Record not found!");
@@ -479,37 +482,32 @@ const AncEditRecord = () => {
 
     return (
         <div className="home-wrapper edd-container">
-            <div className="page-header sticky-header glass-header">
-                <div className="header-content">
-                    <button className="back-btn" onClick={() => navigate(-1)}>
-                        <MaterialIcon name="arrow_back" size={24} />
-                    </button>
-                    <div className="header-titles">
-                        <h1 className="header-title">{formData.motherName}</h1>
-                        <p className="header-subtitle">EDD: {formData.eddDate ? formData.eddDate.split('-').reverse().join('/') : 'N/A'} • {formData.subCenter}</p>
-                    </div>
+            <PageHeader
+                title={formData.motherName}
+                subtitle={`EDD: ${formData.eddDate ? formData.eddDate.split('-').reverse().join('/') : 'N/A'} • ${formData.subCenter}`}
+                actions={
                     <a href={`tel:${formData.mobile}`} className="header-action-btn">
                         <MaterialIcon name="call" size={24} />
                     </a>
-                </div>
+                }
+            />
+
+            <div className="circle-stepper-container">
+                {[1, 2, 3].map(step => (
+                    <CircleStepRequest
+                        key={step}
+                        stepNum={step}
+                        label={step === 1 ? 'Basic' : step === 2 ? 'History' : 'Current'}
+                        currentStep={currentStep}
+                        handleStepClick={handleStepClick}
+                        getStepProgress={getStepProgress}
+                        hasError={stepErrors[step]}
+                        isLast={step === 3}
+                    />
+                ))}
             </div>
 
-            <div className="edit-record-wrapper animate-enter">
-
-                <div className="circle-stepper-container">
-                    {[1, 2, 3].map(step => (
-                        <CircleStepRequest
-                            key={step}
-                            stepNum={step}
-                            label={step === 1 ? 'Basic' : step === 2 ? 'History' : 'Current'}
-                            currentStep={currentStep}
-                            handleStepClick={handleStepClick}
-                            getStepProgress={getStepProgress}
-                            hasError={stepErrors[step]}
-                            isLast={step === 3}
-                        />
-                    ))}
-                </div>
+            <div className="edit-record-wrapper animate-enter" style={{ paddingTop: '90px' }}>
 
                 {currentStep === 1 && (
                     <div className="form-card animate-enter">
@@ -694,6 +692,20 @@ const AncEditRecord = () => {
                                 ))}
                             </div>
                         </div>
+                        {formData.deliveryStatus === 'Pending' && (
+                            <div className="input-group animate-pop" style={{ marginTop: '16px' }}>
+                                <label className="input-label">Birth Planning</label>
+                                <div className="chips-container">
+                                    {['PHC Malkapur', 'CHC Ghanpur Station', 'MCH Jangaon'].map(place => (
+                                        <div key={place}
+                                            className={`chip ${formData.birthPlanning === place ? 'active' : ''}`}
+                                            onClick={() => handleChange('birthPlanning', place)}>
+                                            {place}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                         {formData.deliveryStatus === 'Delivered' && (
                             <div className="animate-pop">
                                 <div className="input-group">

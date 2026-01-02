@@ -1,0 +1,318 @@
+/* CompareSectionPage.css */
+
+.compare-page-wrapper {
+    padding-bottom: 80px;
+    padding-top: 30px;
+    /* Added padding to clear header completely */
+    /* Ensure sticky works */
+    overflow: visible;
+}
+
+.fixed-appbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: var(--neu-bg);
+}
+
+/* --- STICKY HEADER GROUP --- */
+.compare-sticky-header {
+    position: sticky;
+    top: 110px;
+    /* Increased to clear tall header */
+    z-index: 90;
+    background: var(--neu-bg);
+    /* Opaque background to hide scroll underneath */
+    margin: 0 -20px 16px -20px;
+    /* Bleed to edges */
+    padding: 12px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--neu-border-color);
+    border-radius: 0 0 24px 24px;
+    transition: all 0.3s ease;
+    margin-bottom: 16px;
+}
+
+/* --- DASHBOARD CARD --- */
+.compare-dashboard-card {
+    /* Reset styles for compact embedding */
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    margin-bottom: 12px;
+}
+
+.compact-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.compact-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.compact-total {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.compact-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+/* For 3-item grids like Delivered/Aborted */
+.compact-stats-grid.grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.compact-stat-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.compact-stat-item:active {
+    transform: scale(0.95);
+}
+
+.compact-stat-item.active-filter {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.compact-val {
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.compact-lbl {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-top: 4px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+/* Updated Segment Control for Compact */
+.compact-segment {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 3px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.compact-segment-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    padding: 6px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.compact-segment-btn.active {
+    background: var(--neu-bg);
+    color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.compare-dashboard-card.scrolled {
+    padding: 12px;
+    border-radius: 0 0 24px 24px;
+    margin-top: -10px;
+}
+
+/* Active Filter Glow */
+.stats-block.active-filter {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -2px -2px 5px rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--accent-primary);
+    transform: scale(0.98);
+}
+
+.stats-block:hover {
+    transform: translateY(-2px);
+}
+
+/* --- FILTER HEADER --- */
+.section-filter-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin: 0 8px 16px 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+.sort-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--accent-primary);
+    background: rgba(0, 188, 212, 0.1);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+/* --- LIST --- */
+.compare-sc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sc-compare-card {
+    position: relative;
+    background: var(--neu-bg);
+    border-radius: 18px;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-flat);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid transparent;
+    overflow: hidden;
+}
+
+.sc-compare-card:active {
+    transform: scale(0.96);
+}
+
+/* Rank Number */
+.sc-rank {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    opacity: 0.5;
+    width: 20px;
+    text-align: center;
+}
+
+.sc-name-group {
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+}
+
+.sc-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.sc-bar-bg {
+    height: 4px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.sc-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease-out;
+}
+
+/* Value Badge */
+.sc-value-display {
+    font-size: 1.5rem;
+    font-weight: 800;
+    z-index: 2;
+    min-width: 40px;
+    text-align: right;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.zero-val {
+    opacity: 0.3;
+    filter: grayscale(1);
+    transform: scale(0.95);
+}
+
+/* Colors matching dashboard */
+.val-teal .sc-bar-fill {
+    background: #00bcd4;
+    box-shadow: 0 0 10px rgba(0, 188, 212, 0.4);
+}
+
+.val-teal.sc-value-display {
+    color: #00bcd4;
+}
+
+.val-blue .sc-bar-fill {
+    background: #2196f3;
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.4);
+}
+
+.val-blue.sc-value-display {
+    color: #2196f3;
+}
+
+.val-orange .sc-bar-fill {
+    background: #ff9800;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+}
+
+.val-orange.sc-value-display {
+    color: #ff9800;
+}
+
+.val-red .sc-bar-fill {
+    background: #f44336;
+    box-shadow: 0 0 10px rgba(244, 67, 54, 0.4);
+}
+
+.val-red.sc-value-display {
+    color: #f44336;
+}
+
+.val-purple .sc-bar-fill {
+    background: #9c27b0;
+    box-shadow: 0 0 10px rgba(156, 39, 176, 0.4);
+}
+
+.val-purple.sc-value-display {
+    color: #9c27b0;
+}

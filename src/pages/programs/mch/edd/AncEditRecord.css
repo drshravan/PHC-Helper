@@ -31,18 +31,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 10px;
-    /* Sticky Logic */
-    position: sticky;
-    top: 70px;
-    z-index: 99;
+    padding: 10px 10px;
+    /* Fixed below appbar */
+    position: fixed;
+    top: 110px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 600px;
+    z-index: 999;
     background: var(--neu-bg);
     /* Standard Neumorphic Base */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--neu-border-color);
-    margin: 0 -20px 20px -20px;
+    margin: 0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 0 0 20px 20px;
     transition: background 0.3s ease;
 }
 

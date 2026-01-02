@@ -3,13 +3,13 @@ import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCc8qXPZPm27RTM7xgsSRLNeeltNzU5qfg",
-    authDomain: "my-phc-helper-shravan.firebaseapp.com",
-    projectId: "my-phc-helper-shravan",
-    storageBucket: "my-phc-helper-shravan.firebasestorage.app",
-    messagingSenderId: "120748976198",
-    appId: "1:120748976198:web:989332a7f7aa58c0764247",
-    measurementId: "G-9FSPZS7G5K"
+    apiKey: "AIzaSyDib4etT8OoH7f2YuXeykS7Fjd_nJhTdQM",
+    authDomain: "phc-helper.firebaseapp.com",
+    projectId: "phc-helper",
+    storageBucket: "phc-helper.firebasestorage.app",
+    messagingSenderId: "851879769132",
+    appId: "1:851879769132:web:be93eb268aae485b3e0d89",
+    measurementId: "G-5P78WWJDL8"
 };
 
 // Initialize Firebase

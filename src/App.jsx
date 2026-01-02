@@ -21,6 +21,9 @@ import EddVsDeliveries from './pages/programs/mch/edd/EddVsDeliveries'
 import PhcMonthlyInput from './pages/programs/mch/edd/PhcMonthlyInput'
 import ScAncList from './pages/programs/mch/edd/ScAncList'
 import AncEditRecord from './pages/programs/mch/edd/AncEditRecord'
+import CompareSectionPage from './pages/programs/mch/edd/CompareSectionPage'
+import SubCentersListPage from './pages/programs/mch/edd/SubCentersListPage'
+import IncompleteAncList from './pages/programs/mch/edd/IncompleteAncList'
 import MaternalDeathAudit from './pages/programs/mch/audits/MaternalDeathAudit'
 import ChildDeathAudit from './pages/programs/mch/audits/ChildDeathAudit'
 import AefiAudit from './pages/programs/mch/audits/AefiAudit'
@@ -40,6 +43,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/incomplete-anc/:monthId" element={<IncompleteAncList />} />
 
           {/* Services */}
           <Route path="/services" element={<ServicesList />} />
@@ -53,6 +57,8 @@ function App() {
           <Route path="/programs/mch/anc" element={<AncRegistration />} />
           <Route path="/programs/mch/edd-vs-deliveries" element={<EddVsDeliveries />} />
           <Route path="/programs/mch/edd-vs-deliveries/:monthId" element={<PhcMonthlyInput />} />
+          <Route path="/programs/mch/edd-vs-deliveries/:monthId/subcenters" element={<SubCentersListPage />} />
+          <Route path="/programs/mch/edd-vs-deliveries/:monthId/compare/:sectionType" element={<CompareSectionPage />} />
           <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId" element={<ScAncList />} />
           <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId/:recordId" element={<AncEditRecord />} />
           <Route path="/programs/mch/maternal-death-audit" element={<MaternalDeathAudit />} />

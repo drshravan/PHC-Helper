@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MaterialIcon from '../../../../components/ui/MaterialIcon';
 
-const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
+const PhcMonthlyDashboard = ({ data, rawRecords, subCenters, monthId }) => {
+    const navigate = useNavigate();
+
     // data prop would contain the stats for the selected month
     // Using mock defaults if data is missing
     // Mock defaults if data is missing
@@ -13,6 +16,7 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
         primi: 0,
         prevNormal: 0,
         prevLscs: 0,
+        highRisk: 0,
         normal: { govt: 0, pvt: 0, other: 0 },
         lscs: { govt: 0, pvt: 0, other: 0 },
         abortions: {
@@ -44,34 +48,72 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
     const [scModalOpen, setScModalOpen] = useState(false);
 
     const generateCSV = (records) => {
-        // Header
-        const headers = ["S.No", "Mother ID", "Name", "Spouse", "Age", "Mobile", "LMP", "EDD", "Address", "SubCenter", "Status", "Delivery Mode", "Result", "Remarks"];
-        const rows = records.map((r, i) => {
-            const age = r.age || ''; // Assuming age field exists or can be derived
-            const spouse = r.husbandName || '';
-            const address = `${r.village || ''} ${r.district || ''}`.trim();
-            const remarks = r.highRiskTypes ? r.highRiskTypes.join(', ') : '';
+        // defined headers matching formData fields
+        const headers = [
+            "Mother ID", "S.No", "Mother Name", "Husband Name", "Mobile",
+            "Village", "Sub Center", "District", "PHC",
+            "ANM Name", "ANM Mobile", "ASHA Name", "ASHA Mobile",
+            "LMP Date", "EDD Date",
+            "Gravida", "History Summary",
+            "High Risk", "High Risk Types",
+            "Delivery Status", "Delivery Mode", "Delivered Date", "Aborted Date",
+            "Baby Gender", "Facility Type", "Facility Name", "Facility Address",
+            "LSCS Reason", "Abortion Reason", "Pvt Facility Reason",
+            "Gestational Weeks", "Gestational Days", "Birth Planning"
+        ];
 
-            // Clean fields to avoid CSV issues
-            const clean = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
+        const rows = records.map((r, i) => {
+            // Helper for cleaning strings for CSV (handling commas, quotes)
+            const clean = (val) => {
+                const s = String(val || '').replace(/"/g, '""');
+                return `"${s}"`;
+            };
+
+            // Helpers for complex fields
+            const historySummary = (r.historyDetails || []).map((h, idx) =>
+                `G${idx + 1}:${h.mode || '?'}${h.facility ? '-' + h.facility : ''}`
+            ).join('; ');
+
+            const riskTypes = (r.highRiskTypes || []).join(', ');
+            const isHighRisk = (r.isHighRisk === true || r.isHighRisk === "Yes") ? "Yes" : "No";
 
             return [
-                i + 1,
                 clean(r.motherId),
+                clean(r.sNo),
                 clean(r.motherName),
-                clean(spouse),
-                clean(age),
+                clean(r.husbandName),
                 clean(r.mobile),
-                clean(r.lmpDate),
-                clean(r.eddDate),
-                clean(address),
+                clean(r.village),
                 clean(r.subCenter),
+                clean(r.district),
+                clean(r.phc),
+                clean(r.anmName),
+                clean(r.anmMobile),
+                clean(r.ashaName),
+                clean(r.ashaMobile),
+                clean(r.lmpDate || r.lmp_date),
+                clean(r.eddDate || r.edd_date),
+                clean(r.gravida),
+                clean(historySummary),
+                clean(isHighRisk),
+                clean(riskTypes),
                 clean(r.deliveryStatus || r.status || 'Pending'),
                 clean(r.deliveryMode),
-                clean(r.babyGender || r.abortionReason || ''),
-                clean(remarks)
+                clean(r.deliveredDate),
+                clean(r.abortedDate),
+                clean(r.babyGender),
+                clean(r.facilityType),
+                clean(r.facilityName),
+                clean(r.facilityAddress),
+                clean(r.lscsReason),
+                clean(r.abortionReason),
+                clean(r.pvtFacilityReason),
+                clean(r.gestationalWeeks),
+                clean(r.gestationalDays),
+                clean(r.birthPlanning || "CHC Ghanpur Station")
             ].join(',');
         });
+
         return [headers.join(','), ...rows].join('\n');
     };
 
@@ -121,13 +163,24 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
         setScModalOpen(false);
     };
 
+    const handleSummaryCardClick = () => {
+        // Navigate to the sub-centers list route
+        navigate(`/programs/mch/edd-vs-deliveries/${monthId}/subcenters`);
+    };
+
     return (
         <div className="animate-enter">
             {/* ... (Previous Sections Unchanged) ... */}
 
             {/* REPEATED HEADER SECTIONS TO MAINTAIN FILE STRUCTURE ... */}
             {/* --- TOP SUMMARY CARD --- */}
-            <div className="summary-card-dark">
+            <div
+                className="summary-card-dark"
+                onClick={handleSummaryCardClick}
+                style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
                 <div className="summary-header-row">
                     <div className="summary-title">
                         <MaterialIcon name="calendar_today" size={16} />
@@ -160,12 +213,12 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
             </div>
 
             {/* --- PENDING DELIVERIES --- */}
-            <div className="section-header-row">
-                <div className="section-title">Pending Deliveries</div>
+            <div className="section-header-row hover-scale" onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}/compare/pending`)} style={{ cursor: 'pointer' }}>
+                <div className="section-title">Pending Deliveries <MaterialIcon name="chevron_right" size={20} /></div>
                 <div className="section-badge">{stats.pending} Total</div>
             </div>
 
-            <div className="details-card-dark" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div className="details-card-dark" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                 <div className="stats-block">
                     <span className="stats-block-val val-teal">{stats.primi}</span>
                     <span className="stats-block-lbl">PRIMI</span>
@@ -178,11 +231,15 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
                     <span className="stats-block-val val-orange">{stats.prevLscs}</span>
                     <span className="stats-block-lbl">PREV LSCS</span>
                 </div>
+                <div className="stats-block">
+                    <span className="stats-block-val val-red">{stats.highRisk}</span>
+                    <span className="stats-block-lbl">HIGH RISK</span>
+                </div>
             </div>
 
             {/* --- DELIVERED STATISTICS --- */}
-            <div className="section-header-row">
-                <div className="section-title">Delivered Statistics</div>
+            <div className="section-header-row hover-scale" onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}/compare/delivered`)} style={{ cursor: 'pointer' }}>
+                <div className="section-title">Delivered Statistics <MaterialIcon name="chevron_right" size={20} /></div>
                 <div className="section-badge">{stats.delivered} Total</div>
             </div>
 
@@ -238,8 +295,8 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
 
 
             {/* --- ABORTED STATISTICS --- */}
-            <div className="section-header-row">
-                <div className="section-title">Aborted Statistics</div>
+            <div className="section-header-row hover-scale" onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}/compare/aborted`)} style={{ cursor: 'pointer' }}>
+                <div className="section-title">Aborted Statistics <MaterialIcon name="chevron_right" size={20} /></div>
                 <div className="section-badge">{stats.aborted} Total</div>
             </div>
 
@@ -307,38 +364,40 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters }) => {
 
             {/* --- SC SELECTION MODAL --- */}
             {scModalOpen && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.6)', zIndex: 9999,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    backdropFilter: 'blur(5px)'
-                }} onClick={() => setScModalOpen(false)}>
-                    <div className="glass-card animate-pop"
-                        style={{ width: '90%', maxWidth: '350px', maxHeight: '70vh', display: 'flex', flexDirection: 'column', padding: '0', overflow: 'hidden' }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <div style={{ padding: '16px', borderBottom: '1px solid var(--neu-border-color)', background: 'var(--neu-bg)' }}>
-                            <h3 style={{ margin: 0 }}>Select Sub-Center</h3>
+                <div className="dialog-overlay" onClick={() => setScModalOpen(false)}>
+                    <div className="dialog-card" onClick={e => e.stopPropagation()}>
+                        <div className="dialog-header">
+                            <h3 className="dialog-title">Select Sub-Center</h3>
+                            <button className="dialog-close-btn" onClick={() => setScModalOpen(false)}>
+                                <MaterialIcon name="close" size={20} />
+                            </button>
                         </div>
-                        <div style={{ overflowY: 'auto', padding: '16px', display: 'grid', gap: '10px' }}>
+
+                        <div className="dialog-content">
                             {subCenters && subCenters.length > 0 ? (
                                 subCenters.map(sc => (
                                     <button
                                         key={sc.name}
-                                        className="neu-btn"
-                                        style={{ justifyContent: 'space-between', padding: '12px' }}
+                                        className="dialog-list-item"
                                         onClick={() => handleSubCenterReport(sc.name)}
                                     >
-                                        <span>{sc.name}</span>
-                                        <MaterialIcon name="download" size={18} />
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            <MaterialIcon name="apartment" size={20} className="list-item-icon" />
+                                            <span>{sc.name}</span>
+                                        </div>
+                                        <MaterialIcon name="download" size={20} style={{ opacity: 0.5 }} />
                                     </button>
                                 ))
                             ) : (
-                                <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No Sub-Centers Found</p>
+                                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+                                    <MaterialIcon name="domain_disabled" size={48} style={{ marginBottom: 10, opacity: 0.2 }} />
+                                    <p>No Sub-Centers Found</p>
+                                </div>
                             )}
                         </div>
-                        <div style={{ padding: '12px', borderTop: '1px solid var(--neu-border-color)' }}>
-                            <button className="neu-btn" style={{ width: '100%', color: 'var(--error-color)' }} onClick={() => setScModalOpen(false)}>
+
+                        <div className="dialog-footer">
+                            <button className="dialog-cancel-btn" onClick={() => setScModalOpen(false)}>
                                 Cancel
                             </button>
                         </div>

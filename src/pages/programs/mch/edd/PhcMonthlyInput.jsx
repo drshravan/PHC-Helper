@@ -21,9 +21,9 @@ const PhcMonthlyInput = () => {
 
     const title = formatTitle(monthId);
 
-    const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'subcenters'
     const [subCenters, setSubCenters] = useState([]);
     const [rawRecords, setRawRecords] = useState([]);
+    const [incompleteCount, setIncompleteCount] = useState(0);
 
     // State for dashboard data
     const [loading, setLoading] = useState(true);
@@ -45,6 +45,28 @@ const PhcMonthlyInput = () => {
             mt20: { govt: 0, pvt: 0, home: 0 },
         }
     });
+
+    // Calculate incomplete records count
+    useEffect(() => {
+        const checkIncomplete = (d) => {
+            const missing = [];
+            if (!d.husbandName || d.husbandName.trim() === "") missing.push("Husband");
+            if (!d.village || d.village.trim() === "") missing.push("Village");
+            if (!d.ashaMobile || !/^\d{10}$/.test(d.ashaMobile)) missing.push("ASHA Mobile");
+            if (!d.anmMobile || !/^\d{10}$/.test(d.anmMobile)) missing.push("ANM Mobile");
+            if (!d.gravida || d.gravida === "") missing.push("Gravida");
+            if (d.gravida !== 'Primi' && (!d.historyDetails || d.historyDetails.length === 0)) {
+                missing.push("History Details");
+            }
+            return missing.length > 0;
+        };
+
+        const count = rawRecords.filter(record =>
+            record.deliveryStatus === 'Pending' && checkIncomplete(record)
+        ).length;
+
+        setIncompleteCount(count);
+    }, [rawRecords]);
 
     useEffect(() => {
         const fetchMonthData = async () => {
@@ -83,6 +105,7 @@ const PhcMonthlyInput = () => {
                     primi: 0,
                     prevNormal: 0,
                     prevLscs: 0,
+                    highRisk: 0,
                     normal: { govt: 0, pvt: 0, other: 0 },
                     lscs: { govt: 0, pvt: 0, other: 0 },
                     abortions: {
@@ -121,6 +144,7 @@ const PhcMonthlyInput = () => {
                     else {
                         stats.pending++;
                         stats.subCenters[scName].pending++;
+                        if (data.isHighRisk) stats.highRisk++;
                     }
 
                     // 2. Gravida / History Stats
@@ -203,38 +227,18 @@ const PhcMonthlyInput = () => {
     return (
         <div className="home-wrapper phc-wrapper">
             <PageHeader
-                title={`PHC Malkapur - ${title}`}
+                title={title}
                 backPath="/programs/mch/edd-vs-deliveries"
+                incompleteCount={incompleteCount}
             />
 
             <div className="phc-content animate-enter">
-                {activeTab === 'dashboard' ? (
-                    <PhcMonthlyDashboard
-                        data={monthData}
-                        rawRecords={rawRecords}
-                        subCenters={subCenters}
-                    />
-                ) : (
-                    <PhcSubCentersList centers={subCenters} />
-                )}
-            </div>
-
-            {/* --- BOTTOM TABS --- */}
-            <div className="edd-bottom-tabs">
-                <button
-                    className={`edd-tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('dashboard')}
-                >
-                    <MaterialIcon name="dashboard" size={24} />
-                    Dashboard
-                </button>
-                <button
-                    className={`edd-tab-btn ${activeTab === 'subcenters' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('subcenters')}
-                >
-                    <MaterialIcon name="domain" size={24} />
-                    Sub-Centers
-                </button>
+                <PhcMonthlyDashboard
+                    data={monthData}
+                    rawRecords={rawRecords}
+                    subCenters={subCenters}
+                    monthId={monthId}
+                />
             </div>
         </div>
     );
