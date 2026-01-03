@@ -60,7 +60,8 @@ const PageHeader = ({ title, subtitle, backPath, onBack, actions, incompleteCoun
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        color: 'var(--text-primary)'
                     }}
                     aria-label="Go Back"
                 >
@@ -88,7 +89,8 @@ const PageHeader = ({ title, subtitle, backPath, onBack, actions, incompleteCoun
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 flexShrink: 0,
-                                position: 'relative'
+                                position: 'relative',
+                                color: 'var(--text-primary)'
                             }}
                             aria-label="Incomplete Records"
                         >
@@ -127,7 +129,8 @@ const PageHeader = ({ title, subtitle, backPath, onBack, actions, incompleteCoun
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        color: 'var(--text-primary)'
                     }}
                     aria-label="Go Home"
                 >

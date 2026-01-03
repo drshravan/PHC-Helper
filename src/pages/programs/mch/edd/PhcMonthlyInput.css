@@ -3,7 +3,7 @@
 .phc-wrapper {
     /* Padding bottom ensures content isn't hidden behind fixed tabs */
     padding-bottom: 90px;
-    padding-top: 10px;
+    padding-top: 20px;
 }
 
 /* === STICKY HEADER === */

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import PageHeader from '../../../../components/ui/PageHeader';
+import { AppBar, Toolbar, IconButton, Typography, Box, Chip } from '@mui/material';
+import { ArrowBack, Home } from '@mui/icons-material';
 import MaterialIcon from '../../../../components/ui/MaterialIcon';
 import './CompareSectionPage.css';
 
@@ -364,21 +365,53 @@ const CompareSectionPage = () => {
     const colorClass = getColor(); // Compute once for list
 
     return (
-        <div className="home-wrapper compare-page-wrapper">
-            <PageHeader
-                title={`Compare ${sectionTitle}`}
-                subtitle={formatTitle(monthId)}
-                backPath={`/programs/mch/edd-vs-deliveries/${monthId}`}
-            />
+        <Box className="compare-main-container">
+            {/* MUI AppBar - Fixed at Top */}
+            <AppBar
+                position="fixed"
+                elevation={20}
+                sx={{
+                    backgroundColor: 'var(--neu-bg)',
+                    color: 'var(--text-primary)',
+                    backdropFilter: 'blur(10px)',
+                }}
+            >
+                {/* Toolbar with Back, Title, Home */}
+                <Toolbar sx={{ minHeight: '64px', px: 2 }}>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}`)}
+                        sx={{ mr: 2 }}
+                    >
+                        <ArrowBack />
+                    </IconButton>
 
-            <div className="phc-content animate-enter">
+                    <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="h6" component="h1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                            Compare {sectionTitle}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                            {formatTitle(monthId)} • PHC Malkapur
+                        </Typography>
+                    </Box>
 
-                {/* Sticky Header Group - Now Opaque */}
-                <div className="compare-sticky-header">
+                    <IconButton
+                        edge="end"
+                        color="inherit"
+                        onClick={() => navigate('/')}
+                    >
+                        <Home />
+                    </IconButton>
+                </Toolbar>
+
+                {/* Dashboard Cards Container */}
+                <Box className="compare-appbar-content">
                     {sectionType === 'pending' && renderPendingCard()}
                     {sectionType === 'delivered' && renderDeliveredCard()}
                     {sectionType === 'aborted' && renderAbortedCard()}
 
+                    {/* Filter Info */}
                     <div className="section-filter-title" onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} style={{ cursor: 'pointer', marginBottom: 0 }}>
                         <div>
                             <span style={{ opacity: 0.7 }}>FILTERING:</span> {getFilterDisplay(filter)}
@@ -387,9 +420,11 @@ const CompareSectionPage = () => {
                             <MaterialIcon name={sortOrder === 'desc' ? "arrow_downward" : "arrow_upward"} size={16} />
                         </div>
                     </div>
-                </div>
+                </Box>
+            </AppBar>
 
-                {/* SubCenters List */}
+            {/* Scrollable SubCenters List Container */}
+            <Box className="compare-scrollable-content">
                 <div className="compare-sc-list">
                     {processedScs.map((sc, index) => {
                         const val = sc.currentVal;
@@ -422,8 +457,8 @@ const CompareSectionPage = () => {
                         );
                     })}
                 </div>
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 };
 

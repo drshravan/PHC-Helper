@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import PageHeader from '../../../../components/ui/PageHeader';
-import MaterialIcon from '../../../../components/ui/MaterialIcon';
+import { AppBar, Toolbar, IconButton, Typography, Box, Badge } from '@mui/material';
+import { ArrowBack, Home, Notifications } from '@mui/icons-material';
 import PhcMonthlyDashboard from './PhcMonthlyDashboard';
 import PhcSubCentersList from './PhcSubCentersList';
 import './PhcMonthlyInput.css';
@@ -225,12 +225,78 @@ const PhcMonthlyInput = () => {
     }, [monthId]);
 
     return (
-        <div className="home-wrapper phc-wrapper">
-            <PageHeader
-                title={title}
-                backPath="/programs/mch/edd-vs-deliveries"
-                incompleteCount={incompleteCount}
-            />
+        <Box className="home-wrapper phc-wrapper" sx={{ display: 'flex', flexDirection: 'column' }}>
+            <AppBar
+                position="fixed"
+                elevation={0}
+                sx={{
+                    backgroundColor: 'var(--neu-bg)',
+                    color: 'var(--text-primary)',
+                    borderBottom: '1px solid var(--neu-border-color)',
+                    zIndex: 1100
+                }}
+            >
+                <Toolbar sx={{ minHeight: '80px', px: '20px !important', gap: '15px' }}>
+                    <IconButton
+                        onClick={() => navigate('/programs/mch/edd-vs-deliveries')}
+                        className="neu-btn"
+                        sx={{
+                            width: '48px',
+                            height: '48px',
+                            backgroundColor: 'transparent',
+                            boxShadow: 'var(--shadow-flat)',
+                            borderRadius: '50%',
+                            color: 'var(--text-primary)'
+                        }}
+                    >
+                        <ArrowBack />
+                    </IconButton>
+
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" component="h2" sx={{ fontWeight: 800, fontSize: '1.25rem', lineHeight: 1.2 }}>
+                            {title}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                            PHC Malkapur
+                        </Typography>
+                    </Box>
+
+                    <IconButton
+                        onClick={() => navigate(`/incomplete-anc/${monthId}`)}
+                        className="neu-btn"
+                        sx={{
+                            width: '48px',
+                            height: '48px',
+                            backgroundColor: 'transparent',
+                            boxShadow: 'var(--shadow-flat)',
+                            borderRadius: '50%',
+                            color: 'var(--text-primary)'
+                        }}
+                    >
+                        <Badge badgeContent={incompleteCount} color="error" overlap="circular">
+                            <Notifications />
+                        </Badge>
+                    </IconButton>
+
+                    <IconButton
+                        onClick={() => navigate('/')}
+                        className="neu-btn"
+                        sx={{
+                            width: '48px',
+                            height: '48px',
+                            backgroundColor: 'transparent',
+                            boxShadow: 'var(--shadow-flat)',
+                            borderRadius: '50%',
+                            color: 'var(--text-primary)'
+                        }}
+                    >
+                        <Home />
+                    </IconButton>
+                </Toolbar>
+            </AppBar>
+
+            {/* Spacer for fixed AppBar */}
+            <Box sx={{ height: '80px' }} />
 
             <div className="phc-content animate-enter">
                 <PhcMonthlyDashboard
@@ -240,7 +306,7 @@ const PhcMonthlyInput = () => {
                     monthId={monthId}
                 />
             </div>
-        </div>
+        </Box>
     );
 };
 

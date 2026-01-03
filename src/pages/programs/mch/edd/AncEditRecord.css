@@ -8,24 +8,6 @@
     margin: 0 auto;
 }
 
-/* --- CUSTOM HEADER --- */
-.glass-header {
-    background: var(--neu-bg);
-    /* Standard Neumorphic Base */
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--neu-border-color);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    padding: 12px 20px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    margin: -20px -20px 20px -20px;
-    transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-/* ... existing styles ... */
-
 /* --- CIRCULAR STEPPER (Refined) --- */
 .circle-stepper-container {
     display: flex;
@@ -34,7 +16,7 @@
     padding: 10px 10px;
     /* Fixed below appbar */
     position: fixed;
-    top: 110px;
+    top: 80px;
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
@@ -51,14 +33,11 @@
     transition: background 0.3s ease;
 }
 
-/* ... existing styles ... */
-
 /* Date Picker Icon Color Fix */
 input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     opacity: 0.6;
     transition: 0.2s;
-    /* Default: Dark icon for Light Mode (No filter needed usually, or specific for dark text) */
 }
 
 /* Dark Mode Override for Icon */
@@ -74,8 +53,6 @@ html.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
 
 input[type="date"]:hover::-webkit-calendar-picker-indicator {
     opacity: 1;
-    /* Cyan/Teal Tint for Hover - Works best on dark backgrounds, might need adjustment for light */
-    /* Only apply tint transform if not in pure light mode or handle creatively */
 }
 
 .header-content {
@@ -135,8 +112,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     align-items: center;
 }
 
-
-
 .circle-step-item {
     display: flex;
     align-items: center;
@@ -172,14 +147,12 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
-    /* Start from top */
     pointer-events: none;
 }
 
 /* Background Ring */
 .step-ring-bg {
     stroke: var(--neu-border-color);
-    /* Subtle dark border */
     stroke-width: 3;
     fill: none;
     opacity: 0.3;
@@ -188,7 +161,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 /* Progress Ring */
 .step-ring-progress {
     stroke: var(--accent-primary);
-    /* Uses Main Theme Accent (Blue/Cyan) */
     stroke-width: 3;
     fill: none;
     stroke-linecap: round;
@@ -217,7 +189,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 /* Completed State (Checkmark) */
 .circle-step-item.completed .step-inner-content {
     color: var(--success-color);
-    /* Kept green only for checkmark meaning success */
 }
 
 /* Step Label Text */
@@ -237,7 +208,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     height: 2px;
     background: var(--neu-bg);
     box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5), inset -1px -1px 2px rgba(255, 255, 255, 0.05);
-    /* Sunken line */
     margin: 0 4px;
     position: relative;
     border-radius: 2px;
@@ -248,7 +218,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     font-size: 1rem;
     font-weight: 700;
     color: var(--accent-primary);
-    /* Cyan/Blue pop */
     margin-bottom: 16px;
     display: flex;
     align-items: center;
@@ -264,7 +233,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     margin-bottom: 24px;
     box-shadow: var(--shadow-flat);
     border: 1px solid var(--neu-border-color);
-    /* Slight highlight */
 }
 
 /* --- ICONS & INPUTS --- */
@@ -301,22 +269,18 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     width: 100%;
     background: var(--neu-bg);
     border: none;
-    /* Neumorphism relies on shadow, not border */
     border-radius: 12px;
     padding: 16px;
     padding-right: 48px;
-    /* Added padding to prevent text overlap with icons */
     color: var(--text-primary);
     font-size: 1rem;
     outline: none;
     box-shadow: var(--shadow-pressed);
-    /* Inner shadow for input */
     transition: box-shadow 0.2s ease;
 }
 
 .green-input:focus {
     box-shadow: var(--shadow-pressed), 0 0 0 2px var(--accent-primary);
-    /* Pressed + Glow */
 }
 
 .input-suffix {
@@ -353,7 +317,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     border-radius: 20px;
     background: var(--neu-bg);
     box-shadow: var(--shadow-flat);
-    /* Pop out */
     color: var(--text-secondary);
     font-size: 0.9rem;
     cursor: pointer;
@@ -369,7 +332,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 .chip.active {
     color: var(--accent-primary);
     box-shadow: var(--shadow-pressed);
-    /* Pressed in when active */
     border: 1px solid var(--accent-primary);
     font-weight: 600;
 }
@@ -422,7 +384,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     stroke: var(--error-color);
 }
 
-/* Ensure checkmark or number inside doesn't clash */
 .circle-step-item.error .step-inner-content {
     color: var(--error-color);
 }
@@ -434,7 +395,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: var(--shadow-pressed);
-    /* Distinctive "sunken" or "flat" area inside card */
     border: 1px solid var(--neu-border-color);
 }
 
@@ -469,7 +429,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     color: var(--text-primary);
     box-shadow: var(--shadow-flat);
     border: 1px solid var(--accent-primary);
-    /* Slight accent border */
 }
 
 .btn-primary:active {
@@ -502,7 +461,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 
 .calc-box {
     background: var(--neu-bg);
-    /* sunken or just regular bg */
     border: 1px solid var(--accent-primary);
     border-radius: 12px;
     padding: 12px;

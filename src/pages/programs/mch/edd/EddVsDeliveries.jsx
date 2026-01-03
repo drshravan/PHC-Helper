@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 import MaterialIcon from '../../../../components/ui/MaterialIcon';
-import PageHeader from '../../../../components/ui/PageHeader';
 import GlassCard from '../../../../components/ui/GlassCard';
+import PageHeader from '../../../../components/ui/PageHeader';
 import './EddVsDeliveries.css';
 
 const EddVsDeliveries = () => {
@@ -389,7 +390,7 @@ const EddVsDeliveries = () => {
                     <small>Import data in "Entries" tab</small>
                 </div>
             ) : (
-                dashboardData.map(month => {
+                dashboardData.map((month, index) => {
                     // Extract Month Name and Year for new Header Style
                     const [mName, mYear] = month.title.split(' ');
 
@@ -411,7 +412,7 @@ const EddVsDeliveries = () => {
                             {/* Header: Month Year | Total Badge */}
                             <div className="month-header-modern">
                                 <div>
-                                    <span className="month-name-large">{mName}</span>
+                                    <span className="month-name-large">{index + 1}. {mName}</span>
                                     <span className="year-label">{mYear}</span>
                                 </div>
                                 <div className="total-badge-modern">
@@ -650,12 +651,15 @@ const EddVsDeliveries = () => {
     };
 
     return (
-        <div className="home-wrapper edd-container">
+        <Box className="home-wrapper edd-container" sx={{ display: 'flex', flexDirection: 'column' }}>
             {renderDeleteModal()}
             <PageHeader
                 title="EDD & Deliveries"
+                subtitle="MCH Management"
                 backPath="/programs/mch"
             />
+
+            <Box sx={{ height: '15px' }} />
 
             <div style={{ marginBottom: '20px', paddingBottom: '60px' }}>
                 {activeTab === 'dashboard' && renderDashboardTab()}
@@ -679,7 +683,7 @@ const EddVsDeliveries = () => {
                     Entries
                 </button>
             </div>
-        </div>
+        </Box>
     );
 };
 

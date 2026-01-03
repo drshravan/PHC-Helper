@@ -64,7 +64,7 @@ const SubCentersListPage = () => {
                 backPath={`/programs/mch/edd-vs-deliveries/${monthId}`}
             />
 
-            <div className="phc-content animate-enter">
+            <div className="phc-content">
                 {loading ? (
                     <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-secondary)' }}>
                         <div className="spinner" style={{ margin: '0 auto 20px' }}></div>

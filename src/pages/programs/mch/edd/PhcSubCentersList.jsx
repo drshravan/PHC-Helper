@@ -34,7 +34,7 @@ const PhcSubCentersList = ({ centers }) => {
                     onClick={() => handleScClick(sc.name)}
                 >
                     <div className="sc-header">
-                        <span className="sc-name">{sc.name}</span>
+                        <span className="sc-name">{index + 1}. {sc.name}</span>
                         <MaterialIcon name="chevron_right" size={20} className="sc-arrow" />
                     </div>
 

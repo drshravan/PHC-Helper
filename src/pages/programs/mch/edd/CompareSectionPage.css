@@ -1,38 +1,41 @@
 /* CompareSectionPage.css */
 
-.compare-page-wrapper {
-    padding-bottom: 80px;
-    padding-top: 30px;
-    /* Added padding to clear header completely */
-    /* Ensure sticky works */
-    overflow: visible;
+/* --- MAIN CONTAINER LAYOUT --- */
+.compare-main-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--neu-bg);
 }
 
-.fixed-appbar {
+/* --- APPBAR CONTENT (Dashboard Cards) --- */
+.compare-appbar-content {
+    padding: 1px 20px 1px 20px;
+    background: var(--neu-bg);
+    border-bottom: 1px solid var(--neu-border-color);
+}
+
+/* --- SCROLLABLE CONTENT --- */
+.compare-scrollable-content {
     position: fixed;
     top: 0;
+    /* MUI Toolbar (~64px) + Dashboard Cards (~220px) + Filter (~40px) = ~324px */
     left: 0;
-    width: 100%;
-    z-index: 100;
+    right: 0;
+    bottom: 0;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    padding: 24px 20px 20px 20px;
+    /* Extra top padding to prevent overlap */
     background: var(--neu-bg);
 }
 
-/* --- STICKY HEADER GROUP --- */
-.compare-sticky-header {
-    position: sticky;
-    top: 110px;
-    /* Increased to clear tall header */
-    z-index: 90;
-    background: var(--neu-bg);
-    /* Opaque background to hide scroll underneath */
-    margin: 0 -20px 16px -20px;
-    /* Bleed to edges */
-    padding: 12px 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid var(--neu-border-color);
-    border-radius: 0 0 24px 24px;
-    transition: all 0.3s ease;
-    margin-bottom: 16px;
+/* Smooth scrolling on mobile */
+@supports (-webkit-overflow-scrolling: touch) {
+    .compare-scrollable-content {
+        scroll-behavior: smooth;
+    }
 }
 
 /* --- DASHBOARD CARD --- */
@@ -67,6 +70,12 @@
     background: rgba(255, 255, 255, 0.05);
     padding: 4px 10px;
     border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.compact-total:active {
+    transform: scale(0.95);
 }
 
 .compact-stats-grid {
@@ -146,24 +155,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.compare-dashboard-card.scrolled {
-    padding: 12px;
-    border-radius: 0 0 24px 24px;
-    margin-top: -10px;
-}
-
-/* Active Filter Glow */
-.stats-block.active-filter {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -2px -2px 5px rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--accent-primary);
-    transform: scale(0.98);
-}
-
-.stats-block:hover {
-    transform: translateY(-2px);
-}
-
 /* --- FILTER HEADER --- */
 .section-filter-title {
     display: flex;
@@ -172,7 +163,7 @@
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--text-secondary);
-    margin: 0 8px 16px 8px;
+    margin: 8px 8px 0 8px;
     text-transform: uppercase;
     letter-spacing: 1px;
     opacity: 0.8;
@@ -194,6 +185,8 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding-bottom: 40px;
+    /* Extra space at bottom */
 }
 
 .sc-compare-card {
@@ -315,4 +308,19 @@
 
 .val-purple.sc-value-display {
     color: #9c27b0;
+}
+
+/* --- RESPONSIVE ADJUSTMENTS --- */
+@media (max-width: 768px) {
+    .compare-scrollable-content {
+        top: 250px;
+        /* Adjust for mobile - ensuring items #1, #2 are visible */
+    }
+}
+
+@media (min-width: 769px) {
+    .compare-scrollable-content {
+        top: 330px;
+        /* Desktop - matches default */
+    }
 }

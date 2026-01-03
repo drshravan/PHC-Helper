@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import PageHeader from '../../../../components/ui/PageHeader';
+import { Box } from '@mui/material';
 import MaterialIcon from '../../../../components/ui/MaterialIcon';
+import PageHeader from '../../../../components/ui/PageHeader';
 import './ScAncList.css';
 
 const ScAncList = () => {
@@ -165,14 +166,15 @@ const ScAncList = () => {
     const counts = getCounts();
 
     return (
-        <>
+        <Box className="home-wrapper sc-list-wrapper" sx={{ display: 'flex', flexDirection: 'column' }}>
             <PageHeader
                 title={realScId}
                 subtitle={monthTitle}
-                backPath={state?.backPath || `/programs/mch/edd-vs-deliveries/${monthId}/subcenters`}
+                backPath={state?.backPath || `/programs/mch/edd-vs-deliveries/${monthId}`}
             />
 
-            <div className="home-wrapper sc-list-wrapper animate-enter">
+            <div className="animate-enter">
+                <Box sx={{ height: '15px' }} />
 
                 {/* --- STATS FILTER BAR --- */}
                 <div className="stats-filter-bar">
@@ -209,7 +211,7 @@ const ScAncList = () => {
                             <p>No beneficiaries match the current filter in {realScId}.</p>
                         </div>
                     ) : (
-                        filteredList.map((b) => (
+                        filteredList.map((b, index) => (
                             <div
                                 key={b.id}
                                 className="benef-card animate-pop"
@@ -224,7 +226,7 @@ const ScAncList = () => {
                                         </div>
                                         <div className="benef-details">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <span className="benef-name">{b.name}</span>
+                                                <span className="benef-name">{index + 1}. {b.name}</span>
                                                 {b.isHighRisk && <MaterialIcon name="warning" size={16} style={{ color: '#ef5350' }} />}
                                             </div>
                                             <span className="benef-meta" style={{ marginBottom: '2px' }}>Husband: {b.husband}</span>
@@ -270,7 +272,7 @@ const ScAncList = () => {
                     )}
                 </div>
             </div>
-        </>
+        </Box>
     );
 };
 

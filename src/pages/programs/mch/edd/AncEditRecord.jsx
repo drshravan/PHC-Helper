@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import PageHeader from '../../../../components/ui/PageHeader';
+import { AppBar, Toolbar, IconButton, Typography, Box } from '@mui/material';
+import { ArrowBack, Home, Call } from '@mui/icons-material';
 import MaterialIcon from '../../../../components/ui/MaterialIcon';
 import './AncEditRecord.css';
 
@@ -8,7 +9,8 @@ import './AncEditRecord.css';
 const CircleStepRequest = ({ stepNum, label, isLast, currentStep, handleStepClick, getStepProgress, hasError }) => {
     const isActive = currentStep === stepNum;
     const progress = getStepProgress(stepNum) || 0; // Default to 0 to avoid NaN
-    const isCompleted = progress === 100;
+    const isCompleted = progress === 100 && !hasError;
+    const isError = hasError;
 
     // SVG Props
     const radius = 14;
@@ -16,7 +18,7 @@ const CircleStepRequest = ({ stepNum, label, isLast, currentStep, handleStepClic
     const strokeDashoffset = circumference - (progress / 100) * circumference;
 
     return (
-        <div className={`circle-step-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${hasError ? 'error' : ''}`}
+        <div className={`circle-step-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isError ? 'error' : ''}`}
             onClick={() => handleStepClick(stepNum)}>
 
             <div className="step-circle-wrapper">
@@ -30,9 +32,15 @@ const CircleStepRequest = ({ stepNum, label, isLast, currentStep, handleStepClic
                     />
                 </svg>
 
-                {/* Content: Number or Check */}
+                {/* Content: Number, Check, or Error */}
                 <div className="step-inner-content">
-                    {isCompleted && !isActive ? <MaterialIcon name="check" size={14} /> : stepNum}
+                    {isError ? (
+                        <MaterialIcon name="error" size={16} />
+                    ) : (isCompleted && !isActive) ? (
+                        <MaterialIcon name="check" size={16} />
+                    ) : (
+                        stepNum
+                    )}
                 </div>
             </div>
 
@@ -194,6 +202,15 @@ const AncEditRecord = () => {
         const updated = [...formData.historyDetails];
         updated[index] = { ...updated[index], [field]: value };
         setFormData(prev => ({ ...prev, historyDetails: updated }));
+
+        // Clear row error
+        if (errors[`history_${index}`]) {
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next[`history_${index}`];
+                return next;
+            });
+        }
     };
 
     const toggleRiskType = (type) => {
@@ -285,140 +302,122 @@ const AncEditRecord = () => {
     }, [formData.deliveredDate, formData.abortedDate, formData.deliveryStatus, formData.lmpDate, formData.eddDate]);
 
 
-    const getStepProgress = (step) => {
-        let total = 0;
-        let filled = 0;
+    // --- VALIDATION LOGIC ---
+    const validateStep = (step) => {
+        const stepErrors = {};
+        let filledCount = 0;
+        let totalCount = 0;
 
         if (step === 1) {
-            const fields = ['husbandName', 'village', 'anmName', 'anmMobile', 'ashaName', 'ashaMobile'];
-            total = fields.length;
-            fields.forEach(f => { if (formData[f] && formData[f].length > 0) filled++; });
-            return total === 0 ? 0 : Math.round((filled / total) * 100);
-        }
-        if (step === 2) {
-            if (formData.gravida === 'Primi') return 100;
-            const totalRows = formData.historyDetails.length;
-            if (totalRows === 0) return 0;
-            let rowsValid = 0;
-            formData.historyDetails.forEach(d => {
-                const needsGender = d.mode !== 'Aborted';
-                if (d.mode && d.facility && (!needsGender || d.gender)) rowsValid++;
+            const required = ['husbandName', 'village', 'anmName'];
+            const optionalWithFormat = ['anmMobile', 'ashaMobile'];
+
+            totalCount = required.length + (formData.anmMobile ? 1 : 0) + (formData.ashaMobile ? 1 : 0);
+
+            required.forEach(f => {
+                if (!formData[f] || formData[f].trim() === "") {
+                    stepErrors[f] = `${f.replace(/([A-Z])/g, ' $1')} is required`.replace(/^./, str => str.toUpperCase());
+                } else {
+                    filledCount++;
+                }
             });
-            return Math.round((rowsValid / totalRows) * 100);
-        }
-        if (step === 3) {
-            if (formData.deliveryStatus === 'Pending') return 50;
-            if (formData.deliveryStatus === 'Delivered') {
-                const fields = ['deliveryMode', 'deliveredDate', 'facilityType', 'facilityName', 'facilityAddress'];
-                total = fields.length;
-                fields.forEach(f => { if (formData[f]) filled++; });
-                return total === 0 ? 0 : Math.round((filled / total) * 100);
+
+            if (formData.anmMobile) {
+                if (!/^\d{10}$/.test(formData.anmMobile)) {
+                    stepErrors.anmMobile = "Must be exactly 10 digits";
+                } else {
+                    filledCount++;
+                }
             }
-            if (formData.deliveryStatus === 'Aborted') {
-                const fields = ['abortedDate', 'facilityType', 'facilityName'];
-                total = fields.length;
-                fields.forEach(f => { if (formData[f]) filled++; });
-                return total === 0 ? 0 : Math.round((filled / total) * 100);
+
+            if (formData.ashaMobile) {
+                if (!/^\d{10}$/.test(formData.ashaMobile)) {
+                    stepErrors.ashaMobile = "Must be exactly 10 digits";
+                } else {
+                    filledCount++;
+                }
             }
-            return 0;
+
+            // Adjust filledCount to not exceed totalCount if we haven't started typing optional ones
+            const progressTotal = required.length;
+            const progressFilled = required.filter(f => formData[f] && formData[f].trim() !== "").length;
+            const progress = Math.round((progressFilled / progressTotal) * 100);
+
+            return { isValid: Object.keys(stepErrors).length === 0, errors: stepErrors, progress };
         }
-        return 0;
-    };
 
-    const validateAllSteps = () => {
-        const newErrors = {};
-        const newStepErrors = {};
-        let isValid = true;
+        if (step === 2) {
+            if (formData.gravida === 'Primi') return { isValid: true, errors: {}, progress: 100 };
 
-        // --- STEP 1 CHECKS ---
-        let step1Valid = true;
-        if (!formData.husbandName) { newErrors.husbandName = "Husband Name is required"; step1Valid = false; }
-        if (!formData.village) { newErrors.village = "Village is required"; step1Valid = false; }
-        if (!formData.anmName) { newErrors.anmName = "ANM Name is required"; step1Valid = false; }
-        if (formData.anmMobile && !/^\d{10}$/.test(formData.anmMobile)) { newErrors.anmMobile = "Must be 10 digits"; step1Valid = false; }
-        if (formData.ashaMobile && !/^\d{10}$/.test(formData.ashaMobile)) { newErrors.ashaMobile = "Must be 10 digits"; step1Valid = false; }
-        newStepErrors[1] = !step1Valid;
-        if (!step1Valid) isValid = false;
-        if (!step1Valid) isValid = false;
+            totalCount = formData.historyDetails.length;
+            if (totalCount === 0) return { isValid: true, errors: {}, progress: 100 };
 
-        // --- STEP 2 CHECKS ---
-        let step2Valid = true;
-        if (formData.gravida !== 'Primi') {
             formData.historyDetails.forEach((d, idx) => {
                 const needsGender = d.mode !== 'Aborted';
                 if (!d.mode || !d.facility || (needsGender && !d.gender)) {
-                    newErrors[`history_${idx}`] = "Incomplete history";
-                    step2Valid = false;
+                    stepErrors[`history_${idx}`] = "Incomplete row";
+                } else {
+                    filledCount++;
                 }
             });
-        }
-        newStepErrors[2] = !step2Valid;
-        if (!step2Valid) isValid = false;
 
-        // --- STEP 3 CHECKS ---
-        let step3Valid = true;
-        if (formData.deliveryStatus === 'Delivered') {
-            if (!formData.deliveryMode) { newErrors.deliveryMode = "Required"; step3Valid = false; }
-            if (!formData.deliveredDate) { newErrors.deliveredDate = "Required"; step3Valid = false; }
-            if (!formData.facilityType) { newErrors.facilityType = "Required"; step3Valid = false; }
+            const progress = Math.round((filledCount / totalCount) * 100);
+            return { isValid: Object.keys(stepErrors).length === 0, errors: stepErrors, progress };
         }
-        if (formData.deliveryStatus === 'Aborted') {
-            if (!formData.abortedDate) { newErrors.abortedDate = "Required"; step3Valid = false; }
+
+        if (step === 3) {
+            if (formData.deliveryStatus === 'Pending') {
+                return { isValid: true, errors: {}, progress: 100 };
+            }
+
+            if (formData.deliveryStatus === 'Delivered') {
+                const req = ['deliveryMode', 'deliveredDate', 'facilityType'];
+                totalCount = req.length;
+                req.forEach(f => {
+                    if (!formData[f]) stepErrors[f] = "Required";
+                    else filledCount++;
+                });
+            } else if (formData.deliveryStatus === 'Aborted') {
+                const req = ['abortedDate'];
+                totalCount = req.length;
+                req.forEach(f => {
+                    if (!formData[f]) stepErrors[f] = "Required";
+                    else filledCount++;
+                });
+            }
+
+            const progress = Math.round((filledCount / totalCount) * 100);
+            return { isValid: Object.keys(stepErrors).length === 0, errors: stepErrors, progress };
         }
-        newStepErrors[3] = !step3Valid;
-        if (!step3Valid) isValid = false;
 
-        setErrors(newErrors);
-        setStepErrors(newStepErrors);
+        return { isValid: true, errors: {}, progress: 0 };
+    };
 
-        return isValid;
+    const getStepProgress = (step) => {
+        return validateStep(step).progress;
+    };
+
+    const validateAllSteps = () => {
+        const allErrors = {};
+        const stepStatus = {};
+        let overallValid = true;
+
+        [1, 2, 3].forEach(s => {
+            const { isValid, errors: sErrors } = validateStep(s);
+            Object.assign(allErrors, sErrors);
+            stepStatus[s] = !isValid;
+            if (!isValid) overallValid = false;
+        });
+
+        setErrors(allErrors);
+        setStepErrors(stepStatus);
+        return overallValid;
     };
 
     const validateCurrentStep = () => {
-        const step = currentStep;
-        const newErrors = {};
-        let isValid = true;
-
-        if (step === 1) {
-            if (!formData.husbandName) newErrors.husbandName = "Husband Name is required";
-            if (!formData.village) newErrors.village = "Village is required";
-            if (!formData.anmName) newErrors.anmName = "ANM Name is required";
-            if (formData.anmMobile && !/^\d{10}$/.test(formData.anmMobile)) newErrors.anmMobile = "Must be 10 digits";
-            if (formData.ashaMobile && !/^\d{10}$/.test(formData.ashaMobile)) newErrors.ashaMobile = "Must be 10 digits";
-        }
-        if (step === 2) {
-            if (formData.gravida !== 'Primi') {
-                formData.historyDetails.forEach((d, idx) => {
-                    const needsGender = d.mode !== 'Aborted';
-                    if (!d.mode || !d.facility || (needsGender && !d.gender)) {
-                        newErrors[`history_${idx}`] = "Incomplete history";
-                        isValid = false;
-                    }
-                });
-            }
-        }
-        if (step === 3) {
-            if (formData.deliveryStatus === 'Delivered') {
-                if (!formData.deliveryMode) newErrors.deliveryMode = "Required";
-                if (!formData.deliveredDate) newErrors.deliveredDate = "Required";
-                if (!formData.facilityType) newErrors.facilityType = "Required";
-            }
-            if (formData.deliveryStatus === 'Aborted') {
-                if (!formData.abortedDate) newErrors.abortedDate = "Required";
-            }
-        }
-
-        if (Object.keys(newErrors).length > 0) isValid = false;
-
-        // Merge with existing errors to avoid clearing other steps' errors if we were multi-step validating
-        // But for local next, we might want to just set. 
-        // Let's just setErrors(newErrors) for current step focus.
-        // Actually, if we want to keep "red steppers" persistent, we shouldn't clear stepErrors for others.
-        // But here we are just validating current step to proceed.
-
-        setErrors(prev => ({ ...prev, ...newErrors }));
-        setStepErrors(prev => ({ ...prev, [step]: !isValid }));
-
+        const { isValid, errors: sErrors } = validateStep(currentStep);
+        setErrors(prev => ({ ...prev, ...sErrors }));
+        setStepErrors(prev => ({ ...prev, [currentStep]: !isValid }));
         return isValid;
     };
 
@@ -449,22 +448,13 @@ const AncEditRecord = () => {
                 setCurrentStep(prev => prev + 1);
             }
         } else {
-            // Validate ALL before saving
             if (validateAllSteps()) {
                 saveToFirestore();
-            } else {
-                // Determine first invalid step to maybe jump to?
-                // Or just show toast? For now, the steppers turn red.
-                // Optionally jump to first error:
-                // if (stepErrors[1]) setCurrentStep(1); ...
             }
         }
     };
 
     const handleStepClick = (step) => {
-        // Optional: Validate before jumping? Or allow free navigation?
-        // Usually safer to validate "Current" before leaving if going forward.
-        // For now, allow clicks for flexibility, but Save checks validation.
         setCurrentStep(step);
     };
 
@@ -480,16 +470,77 @@ const AncEditRecord = () => {
     }
 
     return (
-        <div className="home-wrapper edd-container">
-            <PageHeader
-                title={formData.motherName}
-                subtitle={`EDD: ${formData.eddDate ? formData.eddDate.split('-').reverse().join('/') : 'N/A'} • ${formData.subCenter}`}
-                actions={
-                    <a href={`tel:${formData.mobile}`} className="header-action-btn">
-                        <MaterialIcon name="call" size={24} />
-                    </a>
-                }
-            />
+        <Box className="home-wrapper edd-container" sx={{ display: 'flex', flexDirection: 'column' }}>
+            <AppBar
+                position="fixed"
+                elevation={0}
+                sx={{
+                    backgroundColor: 'var(--neu-bg)',
+                    color: 'var(--text-primary)',
+                    borderBottom: '1px solid var(--neu-border-color)',
+                    zIndex: 1100
+                }}
+            >
+                <Toolbar sx={{ minHeight: '80px', px: '20px !important', gap: '15px' }}>
+                    <IconButton
+                        onClick={() => navigate(-1)}
+                        className="neu-btn"
+                        sx={{
+                            width: '48px',
+                            height: '48px',
+                            backgroundColor: 'transparent',
+                            boxShadow: 'var(--shadow-flat)',
+                            borderRadius: '50%',
+                            color: 'var(--text-primary)'
+                        }}
+                    >
+                        <ArrowBack />
+                    </IconButton>
+
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" component="h1" sx={{ fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.2 }}>
+                            {formData.motherName}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                            EDD: {formData.eddDate ? formData.eddDate.split('-').reverse().join('/') : 'N/A'} • {formData.subCenter}
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: '8px' }}>
+                        {formData.mobile && (
+                            <IconButton
+                                component="a"
+                                href={`tel:${formData.mobile}`}
+                                className="neu-btn"
+                                sx={{
+                                    width: '48px',
+                                    height: '48px',
+                                    backgroundColor: 'transparent',
+                                    boxShadow: 'var(--shadow-flat)',
+                                    borderRadius: '50%',
+                                    color: 'var(--success-color)'
+                                }}
+                            >
+                                <Call />
+                            </IconButton>
+                        )}
+                        <IconButton
+                            onClick={() => navigate('/')}
+                            className="neu-btn"
+                            sx={{
+                                width: '48px',
+                                height: '48px',
+                                backgroundColor: 'transparent',
+                                boxShadow: 'var(--shadow-flat)',
+                                borderRadius: '50%',
+                                color: 'var(--text-primary)'
+                            }}
+                        >
+                            <Home />
+                        </IconButton>
+                    </Box>
+                </Toolbar>
+            </AppBar>
 
             <div className="circle-stepper-container">
                 {[1, 2, 3].map(step => (
@@ -506,7 +557,7 @@ const AncEditRecord = () => {
                 ))}
             </div>
 
-            <div className="edit-record-wrapper animate-enter" style={{ paddingTop: '90px' }}>
+            <div className="edit-record-wrapper animate-enter" style={{ paddingTop: '150px' }}>
 
                 {currentStep === 1 && (
                     <div className="form-card animate-enter">
@@ -708,7 +759,7 @@ const AncEditRecord = () => {
                         {formData.deliveryStatus === 'Delivered' && (
                             <div className="animate-pop">
                                 <div className="input-group">
-                                    <label className="input-label">Delivery Mode {errors.deliveryMode && '*'}</label>
+                                    <label className="input-label">Delivery Mode {errors.deliveryMode && <span style={{ color: 'var(--error-color)' }}>*</span>}</label>
                                     <div className="chips-container">
                                         {['Normal', 'LSCS'].map(mode => (
                                             <div key={mode}
@@ -718,6 +769,7 @@ const AncEditRecord = () => {
                                             </div>
                                         ))}
                                     </div>
+                                    {renderError('deliveryMode')}
                                 </div>
                                 <div className="input-group">
                                     <label className="input-label">Baby Gender</label>
@@ -733,8 +785,9 @@ const AncEditRecord = () => {
                                     </div>
                                 </div>
                                 <div className="input-group">
-                                    <label className="input-label">Delivered Date {errors.deliveredDate && '*'}</label>
+                                    <label className="input-label">Delivered Date {errors.deliveredDate && <span style={{ color: 'var(--error-color)' }}>*</span>}</label>
                                     <input type="date" className={inputErrorClass('deliveredDate')} value={formData.deliveredDate} onChange={(e) => handleChange('deliveredDate', e.target.value)} />
+                                    {renderError('deliveredDate')}
                                 </div>
                                 {weeksCalc && (
                                     <div className="calc-box animate-enter" style={{ color: calcColor || 'var(--accent-primary)', borderColor: calcColor || 'var(--accent-primary)' }}>
@@ -750,7 +803,7 @@ const AncEditRecord = () => {
                                 )}
                                 <div className="section-title" style={{ marginTop: '20px', fontSize: '0.9rem' }}><MaterialIcon name="local_hospital" size={18} className="title-icon" /> Facility Details</div>
                                 <div className="input-group">
-                                    <label className="input-label">Facility Type {errors.facilityType && '*'}</label>
+                                    <label className="input-label">Facility Type {errors.facilityType && <span style={{ color: 'var(--error-color)' }}>*</span>}</label>
                                     <div className="chips-container">
                                         {['Govt', 'Pvt', 'Others'].map(f => (
                                             <div key={f} className={`chip ${formData.facilityType === f ? 'active' : ''}`}
@@ -779,8 +832,9 @@ const AncEditRecord = () => {
                         {formData.deliveryStatus === 'Aborted' && (
                             <div className="animate-pop">
                                 <div className="input-group">
-                                    <label className="input-label">Abortion Date {errors.abortedDate && '*'}</label>
+                                    <label className="input-label">Abortion Date {errors.abortedDate && <span style={{ color: 'var(--error-color)' }}>*</span>}</label>
                                     <input type="date" className={inputErrorClass('abortedDate')} value={formData.abortedDate} onChange={(e) => handleChange('abortedDate', e.target.value)} />
+                                    {renderError('abortedDate')}
                                 </div>
                                 {weeksCalc && (
                                     <div className="calc-box animate-enter" style={{ color: calcColor || 'var(--accent-primary)', borderColor: calcColor || 'var(--accent-primary)' }}>
@@ -821,7 +875,7 @@ const AncEditRecord = () => {
                     </button>
                 </div>
             </div>
-        </div>
+        </Box>
     );
 };
 
