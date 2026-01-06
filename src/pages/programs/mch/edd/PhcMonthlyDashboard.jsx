@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import * as XLSX from 'xlsx';
+import { db } from '../../../../firebase';
 import MaterialIcon from '../../../../components/ui/MaterialIcon';
 
 const PhcMonthlyDashboard = ({ data, rawRecords, subCenters, monthId }) => {
@@ -163,10 +166,87 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters, monthId }) => {
         setScModalOpen(false);
     };
 
+    const handleAdvancedXlsxReport = () => {
+        if (!rawRecords || rawRecords.length === 0) {
+            alert("No records to generate report.");
+            return;
+        }
+
+        const subCenterStats = subCenters.map(sc => {
+            const records = rawRecords.filter(r => r.subCenter === sc.name);
+            const s = calculateRecordsStats(records);
+            return {
+                "Sub Center": sc.name,
+                "Total ANC": records.length,
+                "Pending": s.pending,
+                "Delivered": s.delivered,
+                "Aborted": s.aborted,
+                "Normal (Govt)": s.normalGovt,
+                "Normal (Pvt)": s.normalPvt,
+                "LSCS (Govt)": s.lscsGovt,
+                "LSCS (Pvt)": s.lscsPvt,
+                "High Risk": s.highRisk
+            };
+        });
+
+        // Add PHC Total
+        const phcStats = calculateRecordsStats(rawRecords);
+        const totalsRow = {
+            "Sub Center": "PHC TOTAL (Cumulative)",
+            "Total ANC": rawRecords.length,
+            "Pending": phcStats.pending,
+            "Delivered": phcStats.delivered,
+            "Aborted": phcStats.aborted,
+            "Normal (Govt)": phcStats.normalGovt,
+            "Normal (Pvt)": phcStats.normalPvt,
+            "LSCS (Govt)": phcStats.lscsGovt,
+            "LSCS (Pvt)": phcStats.lscsPvt,
+            "High Risk": phcStats.highRisk
+        };
+
+        const data = [...subCenterStats, totalsRow];
+
+        // Create Workbook
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "MCH Statistics");
+
+        // Download
+        const fileName = `PHC_Advanced_Stats_${stats.monthName.replace(' ', '_')}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+    };
+
+    const calculateRecordsStats = (records) => {
+        const s = {
+            pending: 0, delivered: 0, aborted: 0,
+            normalGovt: 0, normalPvt: 0, lscsGovt: 0, lscsPvt: 0,
+            highRisk: 0
+        };
+        records.forEach(r => {
+            if (r.isHighRisk === true || r.isHighRisk === "Yes") s.highRisk++;
+            const status = r.deliveryStatus || r.status || 'Pending';
+            if (status === 'Pending') s.pending++;
+            else if (status === 'Aborted') s.aborted++;
+            else if (status === 'Delivered') {
+                s.delivered++;
+                if (r.deliveryMode === 'Normal') {
+                    if (r.facilityType === 'Govt') s.normalGovt++;
+                    else if (r.facilityType === 'Pvt') s.normalPvt++;
+                } else if (r.deliveryMode === 'LSCS') {
+                    if (r.facilityType === 'Govt') s.lscsGovt++;
+                    else if (r.facilityType === 'Pvt') s.lscsPvt++;
+                }
+            }
+        });
+        return s;
+    };
+
     const handleSummaryCardClick = () => {
         // Navigate to the sub-centers list route
         navigate(`/programs/mch/edd-vs-deliveries/${monthId}/subcenters`);
     };
+
+
 
     return (
         <div className="animate-enter">
@@ -360,7 +440,27 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters, monthId }) => {
                     <MaterialIcon name="domain" size={20} style={{ marginBottom: '4px' }} />
                     <span style={{ fontSize: '0.8rem' }}>Sub-Center</span>
                 </button>
+                <button
+                    className="neu-btn"
+                    style={{
+                        height: '60px',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gridColumn: 'span 2',
+                        marginTop: '8px',
+                        gap: '12px',
+                        color: 'var(--success-color)'
+                    }}
+                    onClick={handleAdvancedXlsxReport}
+                >
+                    <MaterialIcon name="summarize" size={24} />
+                    <span style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Advanced Analysis Report (XLSX)</span>
+                </button>
             </div>
+
+
 
             {/* --- SC SELECTION MODAL --- */}
             {scModalOpen && (

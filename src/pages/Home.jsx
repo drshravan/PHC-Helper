@@ -33,6 +33,12 @@ const Home = () => {
             icon: 'description',
             path: '/reports',
             color: '#e91e63'
+        },
+        {
+            title: 'Online Status',
+            icon: 'wifi',
+            path: '/online-status',
+            color: '#00e676'
         }
     ];
 

@@ -5,6 +5,7 @@ import MaterialIcon from '../../../../components/ui/MaterialIcon';
 import GlassCard from '../../../../components/ui/GlassCard';
 import PageHeader from '../../../../components/ui/PageHeader';
 import './EddVsDeliveries.css';
+import { getMonthGroup, getStatUpdates, updateMonthlySummary } from '../../../../utils/ancStats';
 
 const EddVsDeliveries = () => {
     const navigate = useNavigate();
@@ -63,24 +64,21 @@ const EddVsDeliveries = () => {
         setIsDeleting(true);
         try {
             const { db } = await import('../../../../firebase');
-            const { collection, query, where, getDocs, writeBatch } = await import('firebase/firestore');
+            const { collection, query, where, getDocs, writeBatch, doc } = await import('firebase/firestore');
 
             // 1. Get all records for this monthGroup
             const q = query(collection(db, 'anc_records'), where('monthGroup', '==', deleteModal.monthId));
             const snapshot = await getDocs(q);
 
-            if (snapshot.empty) {
-                alert("No records found to delete.");
-                setDeleteModal({ visible: false, monthId: null, monthTitle: '', step: 'confirm' });
-                setIsDeleting(false);
-                return;
-            }
-
-            // 2. Batch Delete (Batches of 500)
             const batch = writeBatch(db);
+
+            // Delete records
             snapshot.docs.forEach(doc => {
                 batch.delete(doc.ref);
             });
+
+            // Delete summary
+            batch.delete(doc(db, "anc_monthly_summaries", deleteModal.monthId));
 
             await batch.commit();
 
@@ -105,71 +103,26 @@ const EddVsDeliveries = () => {
     };
 
     // --- EFFECT: Load Dashboard Data ---
+    // --- EFFECT: Load Dashboard Data ---
     useEffect(() => {
+        let unsubscribe = null;
+
         const loadDashboard = async () => {
             try {
                 const { db } = await import('../../../../firebase');
-                const { collection, onSnapshot, query, where, getDocs, writeBatch } = await import('firebase/firestore');
+                const { collection, onSnapshot, query } = await import('firebase/firestore');
 
-                const q = query(collection(db, "anc_records"));
+                // NEW: Listen to summaries instead of raw records
+                const q = query(collection(db, "anc_monthly_summaries"));
 
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const tempMap = {};
+                unsubscribe = onSnapshot(q, (snapshot) => {
+                    const data = snapshot.docs.map(doc => doc.data());
+                    // Sort by sortDate
+                    data.sort((a, b) => a.sortDate - b.sortDate);
 
-                    snapshot.docs.forEach(doc => {
-                        const data = doc.data();
-                        const mGroup = data.monthGroup; // "jan-2026"
-
-                        if (!mGroup) return;
-
-                        if (!tempMap[mGroup]) {
-                            const parts = mGroup.split('-');
-                            const cleanTitle = parts[0].charAt(0).toUpperCase() + parts[0].slice(1) + " " + parts[1];
-
-                            tempMap[mGroup] = {
-                                id: mGroup,
-                                title: cleanTitle,
-                                total: 0,
-                                pending: 0,
-                                delivered: 0,
-                                aborted: 0,
-                                highRisk: 0,
-                                sortDate: new Date(data.eddDate || 0)
-                            };
-                        }
-
-                        // Aggregation
-                        tempMap[mGroup].total++;
-
-                        const status = data.deliveryStatus || data.status || 'Pending';
-
-                        if (status === 'Pending') tempMap[mGroup].pending++;
-                        else if (status === 'Delivered') tempMap[mGroup].delivered++;
-                        else if (status === 'Aborted') tempMap[mGroup].aborted++;
-
-                        // Fallback: If status is 'Pending' but user just imported, it counts here.
-
-                        // Detailed Stats for UI
-                        if (status === 'Delivered') {
-                            const mode = data.deliveryMode || 'Normal';
-                            if (mode === 'Normal') tempMap[mGroup].normal = (tempMap[mGroup].normal || 0) + 1;
-                            else if (mode === 'LSCS') tempMap[mGroup].lscs = (tempMap[mGroup].lscs || 0) + 1;
-
-                            const fac = (data.facilityType || '').toLowerCase();
-                            if (fac === 'govt' || fac === 'government') tempMap[mGroup].govt = (tempMap[mGroup].govt || 0) + 1;
-                            else if (fac === 'pvt' || fac === 'private') tempMap[mGroup].pvt = (tempMap[mGroup].pvt || 0) + 1;
-                        }
-
-                        // Aborted is separately tracked above
-
-                    });
-
-                    const finalArr = Object.values(tempMap).sort((a, b) => a.sortDate - b.sortDate);
-                    setDashboardData(finalArr);
+                    setDashboardData(data);
                     setLoadingDashboard(false);
                 });
-
-                return () => unsubscribe();
             } catch (err) {
                 console.error("Dashboard Load Error", err);
                 setLoadingDashboard(false);
@@ -179,6 +132,10 @@ const EddVsDeliveries = () => {
         if (activeTab === 'dashboard') {
             loadDashboard();
         }
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
     }, [activeTab]);
 
     // --- PIN Logic ---
@@ -330,44 +287,69 @@ const EddVsDeliveries = () => {
 
     const handleUpload = async () => {
         setUploading(true);
-        let successCount = 0;
-        let failCount = 0;
-        let skippedCount = 0;
-
         try {
             const { db } = await import('../../../../firebase');
-            const { doc, getDoc, setDoc } = await import('firebase/firestore');
+            const { doc, runTransaction, getDoc } = await import('firebase/firestore');
 
-            const uploadPromises = parsedData.map(async (item) => {
-                const docRef = doc(db, "anc_records", item.motherId);
-                try {
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        skippedCount++;
-                        return;
-                    }
-                    await setDoc(docRef, item);
-                    successCount++;
-                } catch (err) {
-                    console.error("Error uploading", item.motherId, err);
-                    failCount++;
+            // 1. Group by month to minimize transactions
+            const groups = {};
+            const skippedIds = [];
+
+            // Pre-check for duplicates (optional but good for feedback)
+            // Ideally we check inside transaction, but for bulk speed we might do a read first or just overwrite?
+            // Existing logic checked getDoc(docRef).
+
+            // Let's do it transactionally per month
+            parsedData.forEach(item => {
+                // Ensure monthGroup is set
+                if (!item.monthGroup) {
+                    item.monthGroup = getMonthGroup(item.eddDate);
                 }
+                const mg = item.monthGroup;
+                if (!mg) return; // Skip invalid dates
+
+                if (!groups[mg]) groups[mg] = [];
+                groups[mg].push(item);
             });
 
-            await Promise.all(uploadPromises);
+            let totalAdded = 0;
 
-            let msg = `Upload Complete!\nAllowed (New): ${successCount}`;
-            if (skippedCount > 0) msg += `\nSkipped (Duplicate IDs): ${skippedCount}`;
-            if (failCount > 0) msg += `\nFailed: ${failCount}`;
-            alert(msg);
+            for (const mg of Object.keys(groups)) {
+                await runTransaction(db, async (transaction) => {
+                    const groupRecords = groups[mg];
 
-            setUploadStatus(failCount === 0 ? 'success' : 'error');
-            if (successCount > 0) {
-                setParsedData([]);
-                setImportText('');
-                setPreviewMode(false);
+                    // Filter duplicates inside transaction or just overwrite? 
+                    // To maintain accurate stats, we MUST know if we are creating or updating.
+                    // For "Import", we usually assume new. 
+                    // Let's check existence for each.
+
+                    const delta = getStatUpdates(null, null); // Zero start for this batch
+
+                    for (const rec of groupRecords) {
+                        const ref = doc(db, "anc_records", rec.motherId);
+                        const snap = await transaction.get(ref);
+
+                        if (!snap.exists()) {
+                            transaction.set(ref, rec);
+
+                            // Add to stats
+                            const recDelta = getStatUpdates(null, rec);
+                            Object.keys(recDelta).forEach(k => delta[k] += recDelta[k]);
+                            totalAdded++;
+                        }
+                        // If exists, we skip (as per original logic)
+                    }
+
+                    // Update Summary
+                    await updateMonthlySummary(transaction, db, mg, delta);
+                });
             }
-            setTimeout(() => setUploadStatus(null), 3000);
+
+            alert(`Upload Complete! Added ${totalAdded} records.`);
+            setUploadStatus('success');
+            setParsedData([]);
+            setImportText('');
+            setPreviewMode(false);
 
         } catch (error) {
             console.error("Upload Critical Error:", error);
@@ -375,6 +357,63 @@ const EddVsDeliveries = () => {
             setUploadStatus('error');
         } finally {
             setUploading(false);
+        }
+    };
+
+    // --- REBUILD STATS (DEV TOOL) ---
+    const rebuildStats = async () => {
+        if (!window.confirm("This will scan ALL records and rebuild the summary stats. Continue?")) return;
+
+        setLoadingDashboard(true);
+        try {
+            const { db } = await import('../../../../firebase');
+            const { collection, getDocs, writeBatch, doc } = await import('firebase/firestore');
+
+            const q = collection(db, "anc_records");
+            const snapshot = await getDocs(q);
+
+            const statsMap = {};
+
+            snapshot.docs.forEach(d => {
+                const data = d.data();
+                const mg = data.monthGroup || getMonthGroup(data.eddDate);
+
+                if (mg) {
+                    if (!statsMap[mg]) statsMap[mg] = getStatUpdates(null, null);
+
+                    const delta = getStatUpdates(null, data);
+                    Object.keys(delta).forEach(k => statsMap[mg][k] += delta[k]);
+                }
+            });
+
+            const batch = writeBatch(db);
+            // Setup initial map for existing summaries to delete/overwrite? 
+            // Ideally we overwrite.
+
+            Object.keys(statsMap).forEach(mg => {
+                const [m, y] = mg.split('-');
+                const cleanTitle = m.charAt(0).toUpperCase() + m.slice(1) + " " + y;
+                const sortDate = new Date(`${m} 1, ${y}`).getTime();
+
+                const summaryData = {
+                    id: mg,
+                    title: cleanTitle,
+                    sortDate: isNaN(sortDate) ? Date.now() : sortDate,
+                    ...statsMap[mg]
+                };
+                // Ensure no negative
+                Object.keys(summaryData).forEach(k => { if (typeof summaryData[k] === 'number' && summaryData[k] < 0) summaryData[k] = 0; });
+
+                batch.set(doc(db, "anc_monthly_summaries", mg), summaryData);
+            });
+
+            await batch.commit();
+            alert("Stats Rebuilt Successfully!");
+        } catch (e) {
+            console.error(e);
+            alert("Rebuild Failed: " + e.message);
+        } finally {
+            setLoadingDashboard(false);
         }
     };
 
@@ -664,6 +703,15 @@ const EddVsDeliveries = () => {
             <div style={{ marginBottom: '20px', paddingBottom: '60px' }}>
                 {activeTab === 'dashboard' && renderDashboardTab()}
                 {activeTab === 'entries' && (isLocked ? renderPinInput() : renderImportScreen())}
+
+                {/* Dev Tool: Rebuild Stats */}
+                {activeTab === 'entries' && !isLocked && (
+                    <div style={{ textAlign: 'center', marginTop: '30px', opacity: 0.5 }}>
+                        <small onClick={rebuildStats} style={{ cursor: 'pointer', textDecoration: 'underline' }}>
+                            Stats Desynchronized? Click to Rebuild
+                        </small>
+                    </div>
+                )}
             </div>
 
             {/* Bottom Tabs */}

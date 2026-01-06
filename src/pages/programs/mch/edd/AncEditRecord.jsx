@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, IconButton, Typography, Box } from '@mui/material';
+import { usePresence } from '../../../../context/PresenceContext';
 import { ArrowBack, Home, Call } from '@mui/icons-material';
 import MaterialIcon from '../../../../components/ui/MaterialIcon';
 import './AncEditRecord.css';
+import { getMonthGroup, getStatUpdates, updateMonthlySummary } from '../../../../utils/ancStats';
 
 // Extracted Component for better performance and state stability
 const CircleStepRequest = ({ stepNum, label, isLast, currentStep, handleStepClick, getStepProgress, hasError }) => {
@@ -54,6 +56,14 @@ const CircleStepRequest = ({ stepNum, label, isLast, currentStep, handleStepClic
 const AncEditRecord = () => {
     const { recordId } = useParams();
     const navigate = useNavigate();
+    const { setStatus } = usePresence();
+    const originalDataRef = React.useRef(null);
+
+    // --- Presence Status ---
+    useEffect(() => {
+        setStatus('filling-form');
+        return () => setStatus('online');
+    }, [setStatus]);
 
     // --- STEPS ---
     const [currentStep, setCurrentStep] = useState(1);
@@ -133,19 +143,38 @@ const AncEditRecord = () => {
 
                 if (snap.exists()) {
                     const data = snap.data();
+                    originalDataRef.current = data; // Store DB state for stats calculation
+
+                    // --- LOCAL STORAGE RESTORATION ---
+                    // Check if there's a locally saved draft for this record
+                    const savedDraft = localStorage.getItem(`anc_draft_${recordId}`);
+                    let baseData = data;
+
+                    if (savedDraft) {
+                        try {
+                            const parsedDraft = JSON.parse(savedDraft);
+                            // Merge Firestore data with local draft
+                            // We prioritize draft data for form fields
+                            baseData = { ...data, ...parsedDraft };
+                            console.log("Restored draft from local storage");
+                        } catch (e) {
+                            console.error("Failed to parse local draft", e);
+                        }
+                    }
+
                     // Merge with defaults to ensure all fields exist
                     setFormData(prev => ({
                         ...prev,
-                        ...data,
+                        ...baseData,
                         // Normalizing keys if snake_case exists
-                        lmpDate: data.lmpDate || data.lmp_date || "",
-                        eddDate: data.eddDate || data.edd_date || "",
+                        lmpDate: baseData.lmpDate || baseData.lmp_date || "",
+                        eddDate: baseData.eddDate || baseData.edd_date || "",
                         // Ensure arrays are initialized if missing
-                        highRiskTypes: data.highRiskTypes || [],
-                        historyDetails: data.historyDetails || [],
+                        highRiskTypes: baseData.highRiskTypes || [],
+                        historyDetails: baseData.historyDetails || [],
                         // Ensure risk is string "Yes"/"No" if stored as boolean (legacy check)
-                        isHighRisk: data.isHighRisk === true || data.isHighRisk === "Yes" ? "Yes" : "No",
-                        birthPlanning: data.birthPlanning || "CHC Ghanpur Station"
+                        isHighRisk: baseData.isHighRisk === true || baseData.isHighRisk === "Yes" ? "Yes" : "No",
+                        birthPlanning: baseData.birthPlanning || "CHC Ghanpur Station"
                     }));
                 } else {
                     alert("Record not found!");
@@ -160,6 +189,16 @@ const AncEditRecord = () => {
         };
         loadRecord();
     }, [recordId, navigate]);
+
+    // --- LOCAL STORAGE AUTO-SAVE ---
+    useEffect(() => {
+        // Only save if data is loaded and we have a recordId
+        if (!isLoading && recordId && formData) {
+            // We don't want to save the default empty state if it's still loading
+            // or if it was just reset.
+            localStorage.setItem(`anc_draft_${recordId}`, JSON.stringify(formData));
+        }
+    }, [formData, isLoading, recordId]);
 
     // --- HANDLERS ---
     const handleChange = (field, value) => {
@@ -425,15 +464,50 @@ const AncEditRecord = () => {
         setIsSaving(true);
         try {
             const { db } = await import('../../../../firebase');
-            const { doc, updateDoc } = await import('firebase/firestore');
+            const { doc, runTransaction } = await import('firebase/firestore');
 
-            const dataToSave = {
+            // 1. Prepare New Data
+            const newData = {
                 ...formData,
                 isHighRisk: formData.isHighRisk === 'Yes',
                 updatedAt: new Date().toISOString()
             };
 
-            await updateDoc(doc(db, "anc_records", recordId), dataToSave);
+            // Ensure monthGroup is up to date (in case dates changed)
+            const newMonthGroup = getMonthGroup(newData.eddDate, newData.deliveryStatus, newData.abortedDate, newData.deliveredDate);
+            if (newMonthGroup) newData.monthGroup = newMonthGroup;
+
+            await runTransaction(db, async (transaction) => {
+                const recRef = doc(db, "anc_records", recordId);
+
+                // 2. Calculate Stat Changes
+                const oldData = originalDataRef.current;
+                const oldMonth = oldData?.monthGroup || getMonthGroup(oldData?.eddDate);
+                const newMonth = newData.monthGroup;
+
+                // Scenario A: Month Changed (or Month added)
+                if (oldMonth && newMonth && oldMonth !== newMonth) {
+                    // Remove from Old
+                    const removeDelta = getStatUpdates(oldData, null);
+                    await updateMonthlySummary(transaction, db, oldMonth, removeDelta);
+
+                    // Add to New
+                    const addDelta = getStatUpdates(null, newData);
+                    await updateMonthlySummary(transaction, db, newMonth, addDelta);
+                }
+                // Scenario B: Same Month (Update)
+                else if (newMonth) {
+                    const delta = getStatUpdates(oldData, newData);
+                    await updateMonthlySummary(transaction, db, newMonth, delta);
+                }
+
+                // 3. Write Record
+                transaction.set(recRef, newData);
+            });
+
+            // Clear local draft upon successful save
+            localStorage.removeItem(`anc_draft_${recordId}`);
+
             navigate(-1);
         } catch (err) {
             console.error("Save Error", err);

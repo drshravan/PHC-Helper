@@ -6,6 +6,7 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 
 // ✅ Theme Context
 import { ThemeProvider } from './context/ThemeContext'
+import { PresenceProvider } from './context/PresenceContext'
 
 // ✅ Page components
 import Home from './pages/Home'
@@ -36,49 +37,53 @@ import TbDeathCases from './pages/programs/communicable/TbDeathCases'
 import LeprosySuspected from './pages/programs/communicable/LeprosySuspected'
 import LeprosyPositive from './pages/programs/communicable/LeprosyPositive'
 import LeprosyDeath from './pages/programs/communicable/LeprosyDeath'
+import OnlineStatusPage from './pages/OnlineStatusPage'
 
 // ✅ Main App component
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/incomplete-anc/:monthId" element={<IncompleteAncList />} />
+      <PresenceProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/online-status" element={<OnlineStatusPage />} />
+            <Route path="/incomplete-anc/:monthId" element={<IncompleteAncList />} />
 
-          {/* Services */}
-          <Route path="/services" element={<ServicesList />} />
-          <Route path="/services/dogbite" element={<Dogbite />} />
-          <Route path="/services/pregnancy-calculator" element={<PregnancyCalculator />} />
-          <Route path="/services/public-holidays" element={<PublicHolidays />} />
+            {/* Services */}
+            <Route path="/services" element={<ServicesList />} />
+            <Route path="/services/dogbite" element={<Dogbite />} />
+            <Route path="/services/pregnancy-calculator" element={<PregnancyCalculator />} />
+            <Route path="/services/public-holidays" element={<PublicHolidays />} />
 
-          {/* Programs */}
-          <Route path="/programs" element={<ProgramsList />} />
-          <Route path="/programs/mch" element={<MCH />} />
-          <Route path="/programs/mch/anc" element={<AncRegistration />} />
-          <Route path="/programs/mch/edd-vs-deliveries" element={<EddVsDeliveries />} />
-          <Route path="/programs/mch/edd-vs-deliveries/:monthId" element={<PhcMonthlyInput />} />
-          <Route path="/programs/mch/edd-vs-deliveries/:monthId/subcenters" element={<SubCentersListPage />} />
-          <Route path="/programs/mch/edd-vs-deliveries/:monthId/compare/:sectionType" element={<CompareSectionPage />} />
-          <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId" element={<ScAncList />} />
+            {/* Programs */}
+            <Route path="/programs" element={<ProgramsList />} />
+            <Route path="/programs/mch" element={<MCH />} />
+            <Route path="/programs/mch/anc" element={<AncRegistration />} />
+            <Route path="/programs/mch/edd-vs-deliveries" element={<EddVsDeliveries />} />
+            <Route path="/programs/mch/edd-vs-deliveries/:monthId" element={<PhcMonthlyInput />} />
+            <Route path="/programs/mch/edd-vs-deliveries/:monthId/subcenters" element={<SubCentersListPage />} />
+            <Route path="/programs/mch/edd-vs-deliveries/:monthId/compare/:sectionType" element={<CompareSectionPage />} />
+            <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId" element={<ScAncList />} />
 
-          {/* Record Routes: Profile by default, Edit explicitly */}
-          <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId/:recordId" element={<AncProfile />} />
-          <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId/:recordId/edit" element={<AncEditRecord />} />
+            {/* Record Routes: Profile by default, Edit explicitly */}
+            <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId/:recordId" element={<AncProfile />} />
+            <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId/:recordId/edit" element={<AncEditRecord />} />
 
-          <Route path="/programs/mch/maternal-death-audit" element={<MaternalDeathAudit />} />
-          <Route path="/programs/mch/child-death-audit" element={<ChildDeathAudit />} />
-          <Route path="/programs/mch/aefi-audit" element={<AefiAudit />} />
-          <Route path="/programs/ncd" element={<NCD />} />
-          <Route path="/programs/communicable" element={<Communicable />} />
-          <Route path="/programs/communicable/tb-active" element={<TbActiveCases />} />
-          <Route path="/programs/communicable/tb-completed" element={<TbTreatmentCompleted />} />
-          <Route path="/programs/communicable/tb-death" element={<TbDeathCases />} />
-          <Route path="/programs/communicable/leprosy-suspected" element={<LeprosySuspected />} />
-          <Route path="/programs/communicable/leprosy-positive" element={<LeprosyPositive />} />
-          <Route path="/programs/communicable/leprosy-death" element={<LeprosyDeath />} />
-        </Routes>
-      </Router>
+            <Route path="/programs/mch/maternal-death-audit" element={<MaternalDeathAudit />} />
+            <Route path="/programs/mch/child-death-audit" element={<ChildDeathAudit />} />
+            <Route path="/programs/mch/aefi-audit" element={<AefiAudit />} />
+            <Route path="/programs/ncd" element={<NCD />} />
+            <Route path="/programs/communicable" element={<Communicable />} />
+            <Route path="/programs/communicable/tb-active" element={<TbActiveCases />} />
+            <Route path="/programs/communicable/tb-completed" element={<TbTreatmentCompleted />} />
+            <Route path="/programs/communicable/tb-death" element={<TbDeathCases />} />
+            <Route path="/programs/communicable/leprosy-suspected" element={<LeprosySuspected />} />
+            <Route path="/programs/communicable/leprosy-positive" element={<LeprosyPositive />} />
+            <Route path="/programs/communicable/leprosy-death" element={<LeprosyDeath />} />
+          </Routes>
+        </Router>
+      </PresenceProvider>
     </ThemeProvider>
   )
 }
