@@ -204,6 +204,7 @@ const EddVsDeliveries = () => {
         const data = [];
         const seenIds = new Set();
         const duplicates = [];
+        const invalidRecords = [];
 
         for (let i = headerIndex + 1; i < lines.length; i++) {
             const row = lines[i].split('\t').map(cell => cell.trim());
@@ -224,25 +225,50 @@ const EddVsDeliveries = () => {
             let monthGroup = "";
 
             if (rawDate) {
-                const parts = rawDate.split('/');
-                if (parts.length === 3) {
-                    const d = parts[0].padStart(2, '0');
-                    const m = parts[1].padStart(2, '0');
-                    const y = parts[2];
-                    isoDate = `${y}-${m}-${d}`;
-                    try {
-                        const dateObj = new Date(isoDate);
-                        monthGroup = dateObj.toLocaleString('default', { month: 'short' }).toLowerCase() + '-' + y;
+                // Handle various separators (-, ., /)
+                const cleanDate = rawDate.replace(/[-.]/g, '/');
+                const parts = cleanDate.split('/');
 
-                        // Calculate LMP: EDD - 280 days
-                        const lmpObj = new Date(dateObj);
-                        lmpObj.setDate(dateObj.getDate() - 280);
-                        const lYear = lmpObj.getFullYear();
-                        const lMonth = String(lmpObj.getMonth() + 1).padStart(2, '0');
-                        const lDay = String(lmpObj.getDate()).padStart(2, '0');
-                        lmpDate = `${lYear}-${lMonth}-${lDay}`;
-                    } catch (e) { console.error("Date parse error", e); }
+                if (parts.length === 3) {
+                    let d, m, y;
+                    // Check for YYYY/MM/DD vs DD/MM/YYYY
+                    if (parts[0].length === 4) {
+                        [y, m, d] = parts;
+                    } else {
+                        [d, m, y] = parts;
+                    }
+
+                    // Basic validation
+                    if (!isNaN(d) && !isNaN(m) && !isNaN(y)) {
+                        d = d.padStart(2, '0');
+                        m = m.padStart(2, '0');
+
+                        // Fix 2-digit years if necessary (assume 20xx)
+                        if (y.length === 2) y = '20' + y;
+
+                        isoDate = `${y}-${m}-${d}`;
+                        try {
+                            const dateObj = new Date(isoDate);
+                            // Validate date object validity
+                            if (!isNaN(dateObj.getTime())) {
+                                monthGroup = dateObj.toLocaleString('default', { month: 'short' }).toLowerCase() + '-' + y;
+
+                                // Calculate LMP: EDD - 280 days
+                                const lmpObj = new Date(dateObj);
+                                lmpObj.setDate(dateObj.getDate() - 280);
+                                const lYear = lmpObj.getFullYear();
+                                const lMonth = String(lmpObj.getMonth() + 1).padStart(2, '0');
+                                const lDay = String(lmpObj.getDate()).padStart(2, '0');
+                                lmpDate = `${lYear}-${lMonth}-${lDay}`;
+                            }
+                        } catch (e) { console.error("Date parse error", e); }
+                    }
                 }
+            }
+
+            if (!monthGroup) {
+                invalidRecords.push(`${mId} (Date: ${rawDate})`);
+                continue; // Skip invalid date records to prevent issues
             }
 
             // Default facility type guessing logic (optional)
@@ -274,12 +300,21 @@ const EddVsDeliveries = () => {
         }
 
         if (data.length === 0) {
-            alert("No valid data rows found.");
+            let msg = "No valid data rows found.";
+            if (invalidRecords.length > 0) msg += `\n${invalidRecords.length} records skipped due to invalid EDD dates.`;
+            alert(msg);
             return;
         }
+
+        let warningMsg = "";
         if (duplicates.length > 0) {
-            alert(`Found ${duplicates.length} duplicate IDs. These were skipped.`);
+            warningMsg += `Skipped ${duplicates.length} duplicates.\n`;
         }
+        if (invalidRecords.length > 0) {
+            warningMsg += `Skipped ${invalidRecords.length} records with invalid dates:\n${invalidRecords.slice(0, 5).join('\n')}${invalidRecords.length > 5 ? '...' : ''}`;
+        }
+
+        if (warningMsg) alert(warningMsg);
 
         setParsedData(data);
         setPreviewMode(true);
@@ -318,30 +353,38 @@ const EddVsDeliveries = () => {
                 await runTransaction(db, async (transaction) => {
                     const groupRecords = groups[mg];
 
-                    // Filter duplicates inside transaction or just overwrite? 
-                    // To maintain accurate stats, we MUST know if we are creating or updating.
-                    // For "Import", we usually assume new. 
-                    // Let's check existence for each.
+                    // 1. Prepare Reads
+                    // We need to read the summary AND all individual records to check existence
+                    const summaryRef = doc(db, 'anc_monthly_summaries', mg);
+                    const recordRefs = groupRecords.map(rec => doc(db, "anc_records", rec.motherId));
+
+                    // Execute all reads in parallel
+                    const [summarySnap, ...recordSnaps] = await Promise.all([
+                        transaction.get(summaryRef),
+                        ...recordRefs.map(ref => transaction.get(ref))
+                    ]);
 
                     const delta = getStatUpdates(null, null); // Zero start for this batch
 
-                    for (const rec of groupRecords) {
-                        const ref = doc(db, "anc_records", rec.motherId);
-                        const snap = await transaction.get(ref);
-
+                    // 2. Process Reads & Queue Writes
+                    recordSnaps.forEach((snap, index) => {
                         if (!snap.exists()) {
+                            const rec = groupRecords[index];
+                            const ref = recordRefs[index];
+
+                            // Write: Create Record
                             transaction.set(ref, rec);
 
-                            // Add to stats
+                            // Calculate Stats
                             const recDelta = getStatUpdates(null, rec);
                             Object.keys(recDelta).forEach(k => delta[k] += recDelta[k]);
                             totalAdded++;
                         }
-                        // If exists, we skip (as per original logic)
-                    }
+                    });
 
-                    // Update Summary
-                    await updateMonthlySummary(transaction, db, mg, delta);
+                    // 3. Update Summary (Write)
+                    // Pass existing summarySnap so it doesn't try to read again
+                    await updateMonthlySummary(transaction, db, mg, delta, summarySnap);
                 });
             }
 

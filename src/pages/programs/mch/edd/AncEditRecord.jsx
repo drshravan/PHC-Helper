@@ -240,7 +240,24 @@ const AncEditRecord = () => {
     const handleHistoryChange = (index, field, value) => {
         const updated = [...formData.historyDetails];
         updated[index] = { ...updated[index], [field]: value };
-        setFormData(prev => ({ ...prev, historyDetails: updated }));
+
+        // Auto-detect High Risk for LSCS
+        let newHighRisk = formData.isHighRisk;
+        let newRiskTypes = [...formData.highRiskTypes];
+
+        if (field === 'mode' && value === 'LSCS') {
+            newHighRisk = 'Yes';
+            if (!newRiskTypes.includes('Previous LSCS')) {
+                newRiskTypes.push('Previous LSCS');
+            }
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            historyDetails: updated,
+            isHighRisk: newHighRisk,
+            highRiskTypes: newRiskTypes
+        }));
 
         // Clear row error
         if (errors[`history_${index}`]) {
@@ -485,20 +502,36 @@ const AncEditRecord = () => {
                 const oldMonth = oldData?.monthGroup || getMonthGroup(oldData?.eddDate);
                 const newMonth = newData.monthGroup;
 
+                // --- 2a. READ ALL DATA FIRST (Required by Firestore) ---
+                let oldSummarySnap = null;
+                let newSummarySnap = null;
+
+                if (oldMonth) {
+                    oldSummarySnap = await transaction.get(doc(db, 'anc_monthly_summaries', oldMonth));
+                }
+
+                // Only read newMonth if it's different from oldMonth (otherwise we already read it)
+                if (newMonth && newMonth !== oldMonth) {
+                    newSummarySnap = await transaction.get(doc(db, 'anc_monthly_summaries', newMonth));
+                }
+
+                // --- 2b. WRITE UPDATES ---
+
                 // Scenario A: Month Changed (or Month added)
                 if (oldMonth && newMonth && oldMonth !== newMonth) {
                     // Remove from Old
                     const removeDelta = getStatUpdates(oldData, null);
-                    await updateMonthlySummary(transaction, db, oldMonth, removeDelta);
+                    await updateMonthlySummary(transaction, db, oldMonth, removeDelta, oldSummarySnap);
 
                     // Add to New
                     const addDelta = getStatUpdates(null, newData);
-                    await updateMonthlySummary(transaction, db, newMonth, addDelta);
+                    await updateMonthlySummary(transaction, db, newMonth, addDelta, newSummarySnap);
                 }
                 // Scenario B: Same Month (Update)
                 else if (newMonth) {
+                    // In this case, oldMonth === newMonth, so we use oldSummarySnap
                     const delta = getStatUpdates(oldData, newData);
-                    await updateMonthlySummary(transaction, db, newMonth, delta);
+                    await updateMonthlySummary(transaction, db, newMonth, delta, oldSummarySnap);
                 }
 
                 // 3. Write Record

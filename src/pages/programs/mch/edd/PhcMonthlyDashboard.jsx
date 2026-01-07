@@ -427,7 +427,7 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters, monthId }) => {
                 <button
                     className="neu-btn"
                     style={{ height: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-                    onClick={handlePhcReport}
+                    onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}/report/phc`)}
                 >
                     <MaterialIcon name="description" size={20} style={{ marginBottom: '4px' }} />
                     <span style={{ fontSize: '0.8rem' }}>PHC Report</span>
@@ -435,7 +435,7 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters, monthId }) => {
                 <button
                     className="neu-btn"
                     style={{ height: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-                    onClick={() => setScModalOpen(true)}
+                    onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}/report/subcenter`)}
                 >
                     <MaterialIcon name="domain" size={20} style={{ marginBottom: '4px' }} />
                     <span style={{ fontSize: '0.8rem' }}>Sub-Center</span>
@@ -453,10 +453,10 @@ const PhcMonthlyDashboard = ({ data, rawRecords, subCenters, monthId }) => {
                         gap: '12px',
                         color: 'var(--success-color)'
                     }}
-                    onClick={handleAdvancedXlsxReport}
+                    onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}/analysis`)}
                 >
-                    <MaterialIcon name="summarize" size={24} />
-                    <span style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Advanced Analysis Report (XLSX)</span>
+                    <MaterialIcon name="analytics" size={24} />
+                    <span style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Advanced Analysis Dashboard</span>
                 </button>
             </div>
 

@@ -84,11 +84,11 @@ export const getStatUpdates = (oldRecord, newRecord) => {
  * @param {string} monthGroup - e.g. "jan-2026"
  * @param {object} delta - The delta object from getStatUpdates
  */
-export const updateMonthlySummary = async (transaction, db, monthGroup, delta) => {
+export const updateMonthlySummary = async (transaction, db, monthGroup, delta, existingSnap = null) => {
     if (!monthGroup) return;
 
     const summaryRef = doc(db, 'anc_monthly_summaries', monthGroup);
-    const summarySnap = await transaction.get(summaryRef);
+    const summarySnap = existingSnap || await transaction.get(summaryRef);
 
     // Filter out zero updates to avoid unnecessary writes if possible (though we likely have some)
     const validUpdates = {};

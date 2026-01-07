@@ -1,22 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, IconButton, Typography, Box, Fab, Divider, Chip } from '@mui/material';
+import { AppBar, Toolbar, IconButton, Typography, Box, CircularProgress } from '@mui/material';
 import {
-    ArrowBack, Home, Call, Edit, LocationOn, Person, MedicalServices,
-    Warning, ChildFriendly, HistoryEdu, Business, Event, Badge as BadgeIcon,
-    LocalHospital, Assignment, Notes, Info, VerifiedUser
+    ArrowBack, Edit, Call, Warning, CheckCircle,
+    Person, LocationOn, LocalHospital, Event,
+    MedicalServices, Phone, Badge, ReportProblem,
+    ArrowBackIos, ArrowForwardIos
 } from '@mui/icons-material';
+import MaterialIcon from '../../../../components/ui/MaterialIcon';
+import { useSwipeable } from 'react-swipeable';
+import AncAiSummary from './AncAiSummary';
 import './AncProfile.css';
 
 const AncProfile = () => {
     const { monthId, subCenterId, recordId } = useParams();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
+    const [currentIndex, setCurrentIndex] = useState(-1);
+    const [recordList, setRecordList] = useState([]);
     const [ancData, setAncData] = useState(null);
 
+    // Load the specific record immediately
     useEffect(() => {
-        const loadRecord = async () => {
+        const loadSingleRecord = async () => {
             if (!recordId) return;
+            setIsLoading(true);
             try {
                 const { db } = await import('../../../../firebase');
                 const { doc, getDoc } = await import('firebase/firestore');
@@ -25,428 +33,523 @@ const AncProfile = () => {
                 const snap = await getDoc(docRef);
 
                 if (snap.exists()) {
-                    const rawData = snap.data();
-
-                    // --- ADVANCED DATA NORMALIZATION (Top Coder Style) ---
-                    const norm = {
-                        ...rawData,
-                        motherName: rawData.motherName || rawData.mother_name || "Unknown Patient",
-                        husbandName: rawData.husbandName || rawData.husband_name || "N/A",
-                        motherId: rawData.motherId || rawData.mother_id || rawData.mcts_id || "N/A",
-                        mobile: rawData.mobile || rawData.mother_mobile || "",
-                        sNo: rawData.sNo || rawData.s_no || "N/A",
-
-                        // Geography
-                        village: rawData.village || "N/A",
-                        subCenter: rawData.subCenter || rawData.sub_center || "N/A",
-                        phc: rawData.phc || "N/A",
-                        district: rawData.district || "N/A",
-
-                        // Dates
-                        lmpDate: rawData.lmpDate || rawData.lmp_date || "",
-                        eddDate: rawData.eddDate || rawData.edd_date || "",
-                        deliveredDate: rawData.deliveredDate || rawData.delivery_date || "",
-                        abortedDate: rawData.abortedDate || rawData.abortion_date || "",
-
-                        // Clinical State
-                        isHighRisk: (rawData.isHighRisk === true || rawData.isHighRisk === "Yes") ? "Yes" : "No",
-                        highRiskTypes: rawData.highRiskTypes || [],
-                        gravida: rawData.gravida || "N/A",
-                        historyDetails: rawData.historyDetails || [],
-
-                        // Outcome & Reasons
-                        deliveryStatus: rawData.deliveryStatus || "Pending",
-                        deliveryMode: rawData.deliveryMode || "",
-                        babyGender: rawData.babyGender || "",
-                        lscsReason: rawData.lscsReason || "",
-                        abortionReason: rawData.abortionReason || "",
-                        pvtFacilityReason: rawData.pvtFacilityReason || "",
-
-                        // Health Team
-                        anmName: rawData.anmName || "Not Assigned",
-                        anmMobile: rawData.anmMobile || "",
-                        ashaName: rawData.ashaName || "Not Assigned",
-                        ashaMobile: rawData.ashaMobile || "",
-
-                        // Facility & Planning
-                        facilityType: rawData.facilityType || "N/A",
-                        facilityName: rawData.facilityName || "N/A",
-                        facilityAddress: rawData.facilityAddress || "",
-                        birthPlanning: rawData.birthPlanning || "CHC Ghanpur Station",
-
-                        // Persistence values
-                        gestationalWeeks: rawData.gestationalWeeks || 0,
-                        gestationalDays: rawData.gestationalDays || 0,
-                        updatedAt: rawData.updatedAt || null
-                    };
-
-                    setAncData(norm);
+                    processData({ id: snap.id, ...snap.data() });
                 } else {
-                    alert("Record not found!");
-                    navigate(-1);
+                    console.error("Record not found");
+                    // Optionally handle not found state
                 }
             } catch (err) {
-                console.error("Load Error", err);
-                alert("Failed to load record.");
+                console.error("Single Record Load Error", err);
             } finally {
                 setIsLoading(false);
             }
         };
-        loadRecord();
-    }, [recordId, navigate]);
 
-    if (isLoading) {
+        loadSingleRecord();
+    }, [recordId]);
+
+    // Load context list for navigation in background
+    useEffect(() => {
+        const loadContextData = async () => {
+            if (!subCenterId || !monthId) return;
+            try {
+                const { db } = await import('../../../../firebase');
+                const { collection, query, where, getDocs } = await import('firebase/firestore');
+
+                // Decode explicitly to match ScAncList logic
+                const realScId = decodeURIComponent(subCenterId);
+
+                const q = query(
+                    collection(db, "anc_records"),
+                    where("monthGroup", "==", monthId),
+                    where("subCenter", "==", realScId)
+                );
+
+                const querySnapshot = await getDocs(q);
+                const records = [];
+                querySnapshot.forEach((doc) => {
+                    records.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Optional: Sort by name to match default list expectation?
+                // records.sort((a, b) => (a.motherName || '').localeCompare(b.motherName || ''));
+
+                setRecordList(records);
+            } catch (err) {
+                console.error("Context Load Error", err);
+            }
+        };
+
+        loadContextData();
+    }, [subCenterId, monthId]);
+
+    // Update index when list or recordId changes
+    useEffect(() => {
+        if (recordList.length > 0 && recordId) {
+            const index = recordList.findIndex(r => r.id === recordId);
+            setCurrentIndex(index);
+        }
+    }, [recordList, recordId]);
+
+    const processData = (rawData) => {
+        const norm = {
+            ...rawData,
+            motherName: rawData.motherName || rawData.mother_name || "Unknown Patient",
+            husbandName: rawData.husbandName || rawData.husband_name || "N/A",
+            mobile: rawData.mobile || rawData.mother_mobile || "",
+            subCenter: rawData.subCenter || rawData.sub_center || "N/A",
+            village: rawData.village || "N/A",
+            district: rawData.district || "N/A",
+            phc: rawData.phc || "N/A",
+
+            lmpDate: rawData.lmpDate || rawData.lmp_date || "",
+            eddDate: rawData.eddDate || rawData.edd_date || "",
+
+            isHighRisk: (rawData.high_risk === "Yes" || rawData.isHighRisk === "Yes" || rawData.isHighRisk === true) ? "Yes" : "No",
+            highRiskReason: rawData.highRiskReason || rawData.high_risk_reason || "Severe Anemia (Hb < 7g/dl)",
+
+            deliveryStatus: rawData.deliveryStatus || "Pending",
+
+            anmName: rawData.anmName || "Sunita Devi",
+            anmMobile: rawData.anmMobile || "+91 90000 00000",
+            ashaName: rawData.ashaName || "Rekha Singh",
+            ashaMobile: rawData.ashaMobile || "+91 90000 00000",
+
+            gestationalWeeks: rawData.gestationalWeeks || 28,
+            gestationalDays: rawData.gestationalDays || 3,
+
+            historySummary: rawData.historySummary || "No history recorded.",
+            historyDetails: Array.isArray(rawData.historyDetails) ? rawData.historyDetails : [],
+            gravida: rawData.gravida || "N/A",
+            deliveryMode: rawData.deliveryMode || "N/A",
+            deliveredDate: rawData.deliveredDate || "N/A",
+            babyGender: rawData.babyGender || "N/A",
+
+            birthPlanning: rawData.birthPlanning || "Not Planned",
+
+            planTransport: rawData.planTransport || "Not Planned",
+            planCompanion: rawData.planCompanion || "Not Planned",
+            facilityType: rawData.facilityType || "Not Selected",
+            facilityName: rawData.facilityName || "N/A",
+            facilityAddress: rawData.facilityAddress || "",
+        };
+        setAncData(norm);
+    };
+
+    const handleSwipe = (direction) => {
+        if (currentIndex === -1 || recordList.length === 0) return;
+
+        let newIndex = currentIndex;
+        if (direction === 'LEFT') {
+            // Next
+            newIndex = currentIndex + 1;
+        } else if (direction === 'RIGHT') {
+            // Previous
+            newIndex = currentIndex - 1;
+        }
+
+        if (newIndex >= 0 && newIndex < recordList.length) {
+            const nextRecord = recordList[newIndex];
+            // Ensure we encode the subCenterId again for the URL
+            navigate(
+                `/programs/mch/edd-vs-deliveries/${monthId}/${encodeURIComponent(subCenterId)}/${nextRecord.id}`,
+                { replace: true }
+            );
+        }
+    };
+
+    const handlers = useSwipeable({
+        onSwipedLeft: () => handleSwipe('LEFT'),
+        onSwipedRight: () => handleSwipe('RIGHT'),
+        preventScrollOnSwipe: true,
+        trackMouse: true
+    });
+
+    if (isLoading || !ancData) {
         return (
-            <div className="home-wrapper edd-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ color: 'var(--text-secondary)' }}>Opening Patient Chart...</div>
-            </div>
+            <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#1a1f2c' }}>
+                <CircularProgress sx={{ color: '#00d4ff' }} />
+            </Box>
         );
     }
 
-    if (!ancData) return null;
-
-    const formatDate = (dateStr) => {
-        if (!dateStr || typeof dateStr !== 'string') return 'N/A';
-        return dateStr.split('-').reverse().join('/');
-    };
-
-    const getGestationLabel = () => {
-        if (ancData.gestationalWeeks || ancData.gestationalDays) {
-            return `${ancData.gestationalWeeks} Weeks ${ancData.gestationalDays} Days`;
-        }
-
-        // Dynamic calc fallback
-        let lmp = ancData.lmpDate ? new Date(ancData.lmpDate) : null;
-        if (!lmp && ancData.eddDate) {
-            lmp = new Date(ancData.eddDate);
-            lmp.setDate(lmp.getDate() - 280);
-        }
-        const end = ancData.deliveredDate ? new Date(ancData.deliveredDate) : ancData.abortedDate ? new Date(ancData.abortedDate) : null;
-
-        if (lmp && end && !isNaN(lmp) && !isNaN(end)) {
-            const diff = end - lmp;
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            return `${Math.floor(days / 7)} Weeks ${days % 7} Days`;
-        }
-        return 'N/A';
-    };
-
     return (
-        <Box className="home-wrapper edd-container" sx={{ display: 'flex', flexDirection: 'column', pb: 10 }}>
-            <AppBar
-                position="fixed"
-                className="glass-appbar"
-                elevation={0}
-                sx={{
-                    zIndex: 1100
-                }}
-            >
-                <Toolbar sx={{ minHeight: '88px', px: '20px !important', gap: '15px' }}>
-                    <IconButton
-                        onClick={() => navigate(-1)}
-                        className="neu-btn"
-                        sx={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '50% !important',
-                            boxShadow: 'var(--shadow-flat)',
-                            color: 'var(--text-primary)'
-                        }}
+        <div className="anc-profile-screen" {...handlers}>
+            {/* Header */}
+            <div className="glass-header">
+                <IconButton onClick={() => navigate(-1)} className="glass-back-btn">
+                    <ArrowBack />
+                </IconButton>
+                <div className="header-title">{ancData.motherName}</div>
+                <div className="header-action">
+                    <button
+                        className="glass-action-btn"
+                        onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}/${subCenterId}/${recordId}/edit`)}
                     >
-                        <ArrowBack />
-                    </IconButton>
-
-                    <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)', lineHeight: 1.2 }}>
-                            {ancData.motherName}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>
-                            {ancData.subCenter}
-                        </Typography>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: '8px' }}>
-                        {ancData.mobile && (
-                            <IconButton
-                                component="a" href={`tel:${ancData.mobile}`}
-                                className="neu-btn"
-                                sx={{
-                                    color: '#00ea98',
-                                    width: '48px',
-                                    height: '48px',
-                                    borderRadius: '50% !important',
-                                    boxShadow: 'var(--shadow-flat)'
-                                }}
-                            >
-                                <Call />
-                            </IconButton>
-                        )}
-                        <IconButton
-                            onClick={() => navigate('/')}
-                            className="neu-btn"
-                            sx={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '50% !important',
-                                boxShadow: 'var(--shadow-flat)',
-                                color: 'var(--text-primary)'
-                            }}
-                        >
-                            <Home />
-                        </IconButton>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-
-            <div className="medical-profile-container" style={{ paddingTop: '95px' }}>
-                <div className="medical-card animate-enter">
-
-                    {/* --- TOP STATUS BAR --- */}
-                    <div className={`status-ribbon ${ancData.deliveryStatus.toLowerCase()}`}>
-                        <div className="ribbon-content">
-                            <Info sx={{ fontSize: 16 }} />
-                            <span>CLINICAL STATUS: {ancData.deliveryStatus.toUpperCase()}</span>
-                        </div>
-                        {ancData.isHighRisk === 'Yes' && (
-                            <div className="risk-chip-pulse">
-                                <Warning sx={{ fontSize: 16 }} />
-                                HIGH RISK
-                            </div>
-                        )}
-                    </div>
-
-                    {/* --- PATIENT SUMMARY HEADER --- */}
-                    <div className="patient-summary">
-                        <div className="patient-core">
-                            <div className="patient-row-primary">
-                                <span className="patient-alias" style={{ fontSize: '1.1rem', fontWeight: 800 }}>w/o {ancData.husbandName}</span>
-                            </div>
-                            <div className="patient-loc-strip">
-                                <LocationOn sx={{ fontSize: 14 }} />
-                                <span>{ancData.village}, {ancData.subCenter}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* --- VITALS / KEY STATS --- */}
-                    <div className="clinical-vitals-grid">
-                        <div className="vital-box blue-t">
-                            <label>GRAVIDA</label>
-                            <span className="vital-val">{ancData.gravida}</span>
-                        </div>
-                        <div className="vital-box orange-t">
-                            <label>LMP DATE</label>
-                            <span className="vital-val">{formatDate(ancData.lmpDate)}</span>
-                        </div>
-                        <div className="vital-box green-t">
-                            <label>EDD DATE</label>
-                            <span className="vital-val">{formatDate(ancData.eddDate)}</span>
-                        </div>
-                    </div>
-
-                    <Divider sx={{ my: 3, opacity: 0.5 }} />
-
-                    {/* --- MAIN CLINICAL SECTIONS --- */}
-                    <div className="medical-body">
-
-                        {/* 1. High Risk Details (Enhanced) */}
-                        {ancData.isHighRisk === 'Yes' && (
-                            <section className="chart-section risk-section">
-                                <div className="chart-section-header">
-                                    <Warning className="header-icon" />
-                                    <h3>Clinical Risk Profile</h3>
-                                </div>
-                                <div className="risk-tag-list animate-stagger">
-                                    {ancData.highRiskTypes.length > 0 ? (
-                                        ancData.highRiskTypes.map((t, idx) => (
-                                            <span key={idx} className="risk-tag animate-pop">{t}</span>
-                                        ))
-                                    ) : (
-                                        <span className="risk-tag-empty">System Flag: No specific factors documented.</span>
-                                    )}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* 2. Obstetric History (Timeline Style) */}
-                        {ancData.historyDetails.length > 0 && (
-                            <section className="chart-section history-section">
-                                <div className="chart-section-header">
-                                    <HistoryEdu className="header-icon" />
-                                    <h3>Past Obstetric History</h3>
-                                </div>
-                                <div className="history-timeline animate-stagger">
-                                    {ancData.historyDetails.map((h, i) => (
-                                        <div key={i} className="timeline-item animate-pop">
-                                            <div className="timeline-marker">G{i + 1}</div>
-                                            <div className="timeline-content">
-                                                <div className="tm-header">
-                                                    <span className={`tm-mode-pill ${h.mode.toLowerCase()}`}>{h.mode}</span>
-                                                    {h.gender && <span className="tm-gender-tag">{h.gender}</span>}
-                                                </div>
-                                                <div className="tm-facility">
-                                                    <LocalHospital sx={{ fontSize: 13, mr: 0.5 }} />
-                                                    {h.facility}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* 3. Care Team (Card Style) */}
-                        <section className="chart-section team-section">
-                            <div className="chart-section-header">
-                                <BadgeIcon className="header-icon" />
-                                <h3>Health Care Providers</h3>
-                            </div>
-                            <div className="team-grid animate-stagger">
-                                <div className="team-card animate-pop">
-                                    <div className="team-info">
-                                        <label>ANM DESIGNATION</label>
-                                        <p>{ancData.anmName}</p>
-                                    </div>
-                                    {ancData.anmMobile && (
-                                        <a href={`tel:${ancData.anmMobile}`} className="team-call-btn"><Call sx={{ fontSize: 18 }} /></a>
-                                    )}
-                                </div>
-                                <div className="team-card animate-pop">
-                                    <div className="team-info">
-                                        <label>ASHA WORKER</label>
-                                        <p>{ancData.ashaName}</p>
-                                    </div>
-                                    {ancData.ashaMobile && (
-                                        <a href={`tel:${ancData.ashaMobile}`} className="team-call-btn"><Call sx={{ fontSize: 18 }} /></a>
-                                    )}
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* 4. Birth Planning & Outcomes (Consolidated) */}
-                        <section className="chart-section outcome-section">
-                            <div className="chart-section-header">
-                                <Assignment className="header-icon" />
-                                <h3>Pregnancy Event Record</h3>
-                            </div>
-
-                            <div className="outcome-details-sheet">
-                                <div className="detail-row">
-                                    <div className="detail-col">
-                                        <label>STATUS</label>
-                                        <p className={`status-indicator ${ancData.deliveryStatus.toLowerCase()}`}>
-                                            {ancData.deliveryStatus}
-                                        </p>
-                                    </div>
-                                    <div className="detail-col">
-                                        <label>GESTATION</label>
-                                        <p>{getGestationLabel()}</p>
-                                    </div>
-                                </div>
-
-                                {ancData.deliveryStatus === 'Pending' ? (
-                                    <div className="planning-box">
-                                        <label>BIRTH PLANNING</label>
-                                        <div className="pb-content">
-                                            <Business sx={{ fontSize: 18 }} />
-                                            <span>Planned at: <strong>{ancData.birthPlanning}</strong></span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="event-box">
-                                        <div className="detail-row">
-                                            <div className="detail-col">
-                                                <label>EVENT DATE</label>
-                                                <p>{formatDate(ancData.deliveredDate || ancData.abortedDate)}</p>
-                                            </div>
-                                            <div className="detail-col">
-                                                <label>MODE / GENDER</label>
-                                                <p>{ancData.deliveryMode || 'N/A'} {ancData.babyGender ? `• ${ancData.babyGender}` : ''}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="facility-record">
-                                            <label>FACILITY DETAILS</label>
-                                            <p className="f-main">{ancData.facilityType} - {ancData.facilityName}</p>
-                                            {ancData.facilityAddress && <p className="f-sub">{ancData.facilityAddress}</p>}
-                                        </div>
-
-                                        {/* Reasons Section - Top Coder Addition */}
-                                        {(ancData.lscsReason || ancData.abortionReason || ancData.pvtFacilityReason) && (
-                                            <div className="clinical-notes">
-                                                <label><Notes sx={{ fontSize: 14 }} /> CLINICAL NOTES & REASONS</label>
-                                                {ancData.lscsReason && (
-                                                    <div className="note-item">
-                                                        <strong>LSCS Reason:</strong> {ancData.lscsReason}
-                                                    </div>
-                                                )}
-                                                {ancData.abortionReason && (
-                                                    <div className="note-item">
-                                                        <strong>Abortion Reason:</strong> {ancData.abortionReason}
-                                                    </div>
-                                                )}
-                                                {ancData.pvtFacilityReason && (
-                                                    <div className="note-item">
-                                                        <strong>Private Facility Reason:</strong> {ancData.pvtFacilityReason}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-
-                        {/* 5. Supplemental Info */}
-                        <section className="chart-section meta-section animate-stagger">
-                            <div className="meta-stack">
-                                <div className="meta-pill animate-pop">
-                                    <label>DISTRICT</label>
-                                    <p>{ancData.district}</p>
-                                </div>
-                                <div className="meta-pill animate-pop">
-                                    <label>PHC CENTER</label>
-                                    <p>{ancData.phc}</p>
-                                </div>
-                                <div className="meta-pill animate-pop">
-                                    <label>DATA LAST SYNCED</label>
-                                    <p>{ancData.updatedAt ? new Date(ancData.updatedAt).toLocaleString() : 'Live'}</p>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-
-                    <div className="medical-footer">
-                        <Divider sx={{ mb: 2 }} />
-                        <div className="footer-copyright">
-                            <VerifiedUser sx={{ fontSize: 14 }} />
-                            <span>Digital Maternal Health Record • Official Copy</span>
-                        </div>
-                    </div>
+                        Edit Profile
+                    </button>
                 </div>
             </div>
 
-            <Fab
-                variant="extended"
-                color="primary"
-                onClick={() => navigate(`/programs/mch/edd-vs-deliveries/${monthId}/${subCenterId}/${recordId}/edit`)}
-                sx={{
-                    position: 'fixed',
-                    bottom: 24,
-                    right: 24,
-                    px: 3,
-                    backgroundColor: 'var(--accent-primary)',
-                    '&:hover': { backgroundColor: 'var(--accent-secondary)' },
-                    boxShadow: '0 8px 30px rgba(0, 188, 212, 0.4)',
-                    textTransform: 'none',
-                    fontWeight: 800,
-                    gap: 1
-                }}
-            >
-                <Edit />
-                Edit Record
-            </Fab>
-        </Box >
+            <div className="anc-content-scroll">
+                {/* 1. Updated Top Status Display - Hero Card */}
+                {/* 1. Updated Top Status Display - Hero Card */}
+                <div className="hero-status-card">
+                    <div className="hero-row">
+                        <div className={`hero-icon-box ${ancData.deliveryStatus === 'Pending' ? 'orange' : ancData.deliveryStatus === 'Aborted' ? 'red' : 'green'}`}>
+                            {ancData.deliveryStatus === 'Pending' ? <Event fontSize="medium" /> :
+                                ancData.deliveryStatus === 'Aborted' ? <ReportProblem fontSize="medium" /> :
+                                    <CheckCircle fontSize="medium" />}
+                        </div>
+                        <div className="hero-info">
+                            <span className="hero-label">CURRENT STATUS</span>
+                            <span className={`hero-value ${ancData.deliveryStatus === 'Pending' ? 'orange' :
+                                ancData.deliveryStatus === 'Aborted' ? 'red' : 'green'
+                                }`}>
+                                {ancData.deliveryStatus}
+                            </span>
+                        </div>
+                        <div className="hero-extra">
+                            {ancData.deliveryStatus === 'Pending' ? (
+                                <div className="edd-badge">
+                                    <span>EDD</span>
+                                    <strong>{ancData.eddDate ? ancData.eddDate.split('-').reverse().join('/') : 'N/A'}</strong>
+                                </div>
+                            ) : (
+                                <div className="edd-badge completed">
+                                    <CheckCircle fontSize="small" />
+                                    <span>Done</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Conditional High Risk Banner */}
+                {ancData.isHighRisk === 'Yes' && (
+                    <div className="high-risk-banner animate-pulse-red">
+                        <div className="banner-icon">
+                            <ReportProblem />
+                        </div>
+                        <div className="banner-content">
+                            <div className="banner-title">HIGH RISK PREGNANCY DETECTED</div>
+                            <div className="banner-tags">
+                                {(ancData.highRiskTypes && ancData.highRiskTypes.length > 0) ? (
+                                    ancData.highRiskTypes.map((type, idx) => (
+                                        <span key={idx} className="risk-tag">{type}</span>
+                                    ))
+                                ) : (
+                                    <span className="risk-tag">{ancData.highRiskReason}</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Personal Details */}
+                <div className="glass-section">
+                    <div className="section-header">
+                        <div className="dot blue"></div>
+                        <span>PERSONAL DETAILS</span>
+                    </div>
+
+                    <div className="detail-row">
+                        <div className="field-group">
+                            <label>Mother Name</label>
+                            <div className="value-lg">{ancData.motherName}</div>
+                        </div>
+                    </div>
+
+                    <div className="detail-row">
+                        <div className="field-group">
+                            <label>Husband Name</label>
+                            <div className="value-lg">{ancData.husbandName}</div>
+                        </div>
+                    </div>
+
+                    <div className="glass-input-box">
+                        <div className="box-content">
+                            <label>Mobile</label>
+                            <div className="box-value">{ancData.mobile}</div>
+                        </div>
+                        <div className="box-action">
+                            <IconButton href={`tel:${ancData.mobile}`} className="neon-phone-btn">
+                                <Phone fontSize="small" />
+                            </IconButton>
+                        </div>
+                    </div>
+
+                    <div className="detail-grid-2">
+                        <div className="field-group">
+                            <label>Village</label>
+                            <div className="value-md">{ancData.village}</div>
+                        </div>
+                        <div className="field-group">
+                            <label>Sub Center</label>
+                            <div className="value-md">{ancData.subCenter}</div>
+                        </div>
+                        <div className="field-group">
+                            <label>District</label>
+                            <div className="value-md">{ancData.district}</div>
+                        </div>
+                        <div className="field-group">
+                            <label>PHC</label>
+                            <div className="value-md">{ancData.phc}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Health Worker */}
+                <div className="glass-section">
+                    <div className="section-header">
+                        <div className="dot purple"></div>
+                        <span>HEALTH WORKER</span>
+                    </div>
+
+                    <div className="worker-box">
+                        <div className="worker-info">
+                            <label>ANM Name</label>
+                            <div className="worker-name">{ancData.anmName}</div>
+                            <div className="worker-sub">{ancData.anmMobile}</div>
+                        </div>
+                        <IconButton href={`tel:${ancData.anmMobile}`} className="neon-phone-btn sm">
+                            <Phone fontSize="small" />
+                        </IconButton>
+                    </div>
+
+                    <div className="worker-box">
+                        <div className="worker-info">
+                            <label>ASHA Name</label>
+                            <div className="worker-name">{ancData.ashaName}</div>
+                            <div className="worker-sub">{ancData.ashaMobile}</div>
+                        </div>
+                        <IconButton href={`tel:${ancData.ashaMobile}`} className="neon-phone-btn sm">
+                            <Phone fontSize="small" />
+                        </IconButton>
+                    </div>
+                </div>
+
+                {/* Past Delivery Details */}
+                <div className="glass-section">
+                    <div className="section-header">
+                        <div className="dot cyan"></div>
+                        <span>PAST DELIVERY DETAILS</span>
+                    </div>
+
+                    <div className="detail-row" style={{ marginBottom: 15 }}>
+                        <div className="field-group">
+                            <label>Gravida (Total Pregnancies)</label>
+                            <div className="value-lg">{ancData.gravida}</div>
+                        </div>
+                    </div>
+
+                    {ancData.historyDetails && ancData.historyDetails.length > 0 ? (
+                        <div className="history-list">
+                            {ancData.historyDetails.map((item, index) => (
+                                <div key={index} style={{
+                                    background: 'rgba(255,255,255,0.03)',
+                                    borderRadius: '8px',
+                                    padding: '12px',
+                                    marginBottom: '10px',
+                                    border: '1px solid rgba(255,255,255,0.05)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                                            PREGNANCY {index + 1}
+                                        </span>
+                                        <span style={{
+                                            fontSize: '0.7rem',
+                                            padding: '2px 8px',
+                                            borderRadius: '4px',
+                                            background: item.mode === 'Aborted' ? 'rgba(248,113,113,0.15)' : 'rgba(52,211,153,0.15)',
+                                            color: item.mode === 'Aborted' ? '#f87171' : '#34d399',
+                                            border: item.mode === 'Aborted' ? '1px solid rgba(248,113,113,0.2)' : '1px solid rgba(52,211,153,0.2)'
+                                        }}>
+                                            {item.mode}
+                                        </span>
+                                    </div>
+
+                                    <div className="detail-grid-2">
+                                        {item.mode !== 'Aborted' && item.gender && (
+                                            <div className="field-group">
+                                                <label>Gender</label>
+                                                <div className="value-sm" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    {item.gender}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="field-group">
+                                            <label>Facility</label>
+                                            <div className="value-sm">{item.facility}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="glass-inset-box">
+                            <label>Summary</label>
+                            <p>{ancData.historySummary}</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* 3. Present High Risk Section - Only if Yes */}
+                {ancData.isHighRisk === 'Yes' && (
+                    <div className="glass-section">
+                        <div className="section-header">
+                            <div className="dot red"></div>
+                            <span>PRESENT PREGNANCY DETAILS</span>
+                        </div>
+
+
+
+                        <div className="risk-alert-box display-list">
+                            <div className="risk-title-sm">IDENTIFIED RISKS:</div>
+                            <div className="risk-chips-wrap">
+                                {(ancData.highRiskTypes && ancData.highRiskTypes.length > 0) ? (
+                                    ancData.highRiskTypes.map((type, idx) => (
+                                        <span key={idx} className="risk-chip-item">
+                                            <ReportProblem style={{ fontSize: 14, marginRight: 6 }} /> {type}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="risk-chip-item">
+                                        <ReportProblem style={{ fontSize: 14, marginRight: 6 }} /> {ancData.highRiskReason}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Fallback for Normal Pregnancy Details if NO risk */}
+                {ancData.isHighRisk !== 'Yes' && (
+                    <div className="glass-section">
+                        <div className="section-header">
+                            <div className="dot green"></div>
+                            <span>PRESENT PREGNANCY DETAILS</span>
+                        </div>
+
+                        <div className="status-pill green mt-3" style={{ textAlign: 'center', width: '100%', display: 'block' }}>
+                            NO HIGH RISK FACTORS DETECTED
+                        </div>
+                    </div>
+                )}
+
+                {/* Birth Planning - Only if Pending */}
+                {ancData.deliveryStatus === 'Pending' && (
+                    <div className="glass-section">
+                        <div className="section-header">
+                            <div className="dot blue"></div>
+                            <span>BIRTH PLANNING</span>
+                        </div>
+
+                        <div className="worker-box" style={{ marginBottom: 0 }}>
+                            <div className="worker-info">
+                                <label>Planned Facility</label>
+                                <div className="worker-name">{ancData.birthPlanning}</div>
+                            </div>
+                            <MaterialIcon name="business" size={24} style={{ opacity: 0.5 }} />
+                        </div>
+                    </div>
+                )}
+
+                {/* Delivery Outcome */}
+                <div className="glass-section mb-extra">
+                    <div className="section-header">
+                        <div className="dot green"></div>
+                        <span>DELIVERY OUTCOME</span>
+                    </div>
+
+                    <div className="field-group">
+                        <label>Delivery Status</label>
+                        <span className={`status-pill ${ancData.deliveryStatus === 'Aborted' ? 'red' : 'green'}`}>
+                            {ancData.deliveryStatus}
+                        </span>
+                    </div>
+
+                    {/* Gestation Duration for Completed Pregnancies */}
+                    {ancData.deliveryStatus !== 'Pending' && (
+                        <div className="detail-grid-2 mt-3">
+                            <div className="field-group">
+                                <label>Duration at {ancData.deliveryStatus}</label>
+                                <div className="value-md">{ancData.gestationalWeeks} Weeks, {ancData.gestationalDays} Days</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {ancData.deliveryStatus === 'Aborted' && (
+                        <>
+                            <div className="detail-grid-2 mt-3">
+                                <div className="field-group">
+                                    <label>Aborted Date</label>
+                                    <div className="value-sm">{ancData.abortedDate.split('-').reverse().join('/')}</div>
+                                </div>
+                                <div className="field-group">
+                                    <label>Abortion Reason</label>
+                                    <div className="value-sm">{ancData.abortionReason}</div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {ancData.deliveryStatus === 'Delivered' && (
+                        <>
+                            <div className="detail-grid-2 mt-3">
+                                <div className="field-group">
+                                    <label>Delivered Date</label>
+                                    <div className="value-sm">{ancData.deliveredDate.split('-').reverse().join('/')}</div>
+                                </div>
+                                <div className="field-group">
+                                    <label>Baby Gender</label>
+                                    <div className="value-sm">{ancData.babyGender}</div>
+                                </div>
+                            </div>
+
+                            <div className="field-group mt-3">
+                                <label>Delivery Mode</label>
+                                <div className="value-md">{ancData.deliveryMode}</div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Facility Details for both Delivered and Aborted (if available) */}
+                    {ancData.deliveryStatus !== 'Pending' && (
+                        <div className="glass-inset-box mt-3">
+                            <div className="section-header" style={{ marginBottom: 10, fontSize: '0.65rem' }}>
+                                <span>ACTUAL FACILITY DETAILS</span>
+                            </div>
+                            <div className="field-group">
+                                <label>Facility Name</label>
+                                <div className="value-md highlight">{ancData.facilityName}</div>
+                            </div>
+                            <div className="detail-grid-2 mt-2">
+                                <div className="field-group">
+                                    <label>Type</label>
+                                    <div className="value-sm">{ancData.facilityType}</div>
+                                </div>
+                                <div className="field-group">
+                                    <label>Address</label>
+                                    <div className="value-sm opacity-70" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ancData.facilityAddress}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* AI Summary */}
+                <AncAiSummary ancData={ancData} />
+            </div>
+
+            {/* Navigation Hints */}
+            <div className={`nav-hint left ${currentIndex > 0 ? 'visible' : ''}`}>
+                <ArrowBackIos />
+            </div>
+            <div className={`nav-hint right ${currentIndex < recordList.length - 1 ? 'visible' : ''}`}>
+                <ArrowForwardIos />
+            </div>
+        </div>
     );
 };
 

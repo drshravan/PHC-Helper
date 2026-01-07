@@ -26,6 +26,8 @@ import AncProfile from './pages/programs/mch/edd/AncProfile'
 import CompareSectionPage from './pages/programs/mch/edd/CompareSectionPage'
 import SubCentersListPage from './pages/programs/mch/edd/SubCentersListPage'
 import IncompleteAncList from './pages/programs/mch/edd/IncompleteAncList'
+import ReportView from './pages/programs/mch/edd/ReportView'
+import AdvancedAnalysis from './pages/programs/mch/edd/AdvancedAnalysis'
 import MaternalDeathAudit from './pages/programs/mch/audits/MaternalDeathAudit'
 import ChildDeathAudit from './pages/programs/mch/audits/ChildDeathAudit'
 import AefiAudit from './pages/programs/mch/audits/AefiAudit'
@@ -64,6 +66,8 @@ function App() {
             <Route path="/programs/mch/edd-vs-deliveries/:monthId" element={<PhcMonthlyInput />} />
             <Route path="/programs/mch/edd-vs-deliveries/:monthId/subcenters" element={<SubCentersListPage />} />
             <Route path="/programs/mch/edd-vs-deliveries/:monthId/compare/:sectionType" element={<CompareSectionPage />} />
+            <Route path="/programs/mch/edd-vs-deliveries/:monthId/report/:reportType" element={<ReportView />} />
+            <Route path="/programs/mch/edd-vs-deliveries/:monthId/analysis" element={<AdvancedAnalysis />} />
             <Route path="/programs/mch/edd-vs-deliveries/:monthId/:subCenterId" element={<ScAncList />} />
 
             {/* Record Routes: Profile by default, Edit explicitly */}
