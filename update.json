@@ -1,7 +1,7 @@
 {
-  "versionCode": 2,
-  "versionName": "1.1",
+  "versionCode": 3,
+  "versionName": "1.2",
   "apkUrl": "https://drshravan.github.io/PHC-Helper/update.apk",
-  "releaseNotes": "• New Update Feature: In-app updates are now supported.\n• Bug Fixes: General improvements and stability fixes.",
+  "releaseNotes": "• WebView Fixes: Enabled native Date/Time pickers, Dropdowns, and Javascript Alerts.\n• Improved file upload support.",
   "forced": false
 }
