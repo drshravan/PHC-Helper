@@ -1,7 +1,7 @@
 {
-  "versionCode": 3,
-  "versionName": "1.2",
+  "versionCode": 4,
+  "versionName": "1.3",
   "apkUrl": "https://drshravan.github.io/PHC-Helper/update.apk",
-  "releaseNotes": "• WebView Fixes: Enabled native Date/Time pickers, Dropdowns, and Javascript Alerts.\n• Improved file upload support.",
+  "releaseNotes": "• Fixed App Sharing and File Sharing (CSV/PDF) features.\n• Improved file download handling.",
   "forced": false
 }
