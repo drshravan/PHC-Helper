@@ -4,9 +4,54 @@ import MaterialIcon from '../../../components/ui/MaterialIcon';
 import GlassCard from '../../../components/ui/GlassCard';
 import '../../../pages/Home.css';
 import PageHeader from '../../../components/ui/PageHeader';
+import { useFavorites } from '../../../hooks/useFavorites';
 
 const MCH = () => {
     const navigate = useNavigate();
+    const { isFavorite, toggleFavorite } = useFavorites();
+
+    const programs = [
+        {
+            id: 'anc-reg',
+            title: 'ANC Registration',
+            path: '/programs/mch/anc',
+            icon: 'how_to_reg',
+            color: '#9c27b0'
+        },
+        {
+            id: 'edd-delivery',
+            title: 'EDD vs Deliveries',
+            path: '/programs/mch/edd-vs-deliveries',
+            icon: 'pregnant_woman',
+            color: '#e91e63'
+        },
+        {
+            id: 'mat-death',
+            title: 'Maternal Death Audit',
+            path: '/programs/mch/maternal-death-audit',
+            icon: 'medical_services',
+            color: '#f44336'
+        },
+        {
+            id: 'child-death',
+            title: 'Child Death Audit',
+            path: '/programs/mch/child-death-audit',
+            icon: 'baby_changing_station',
+            color: '#ff9800'
+        },
+        {
+            id: 'aefi-audit',
+            title: 'AEFI Audit',
+            path: '/programs/mch/aefi-audit',
+            icon: 'vaccines',
+            color: '#90a4ae'
+        }
+    ];
+
+    const handleFavorite = (e, item) => {
+        e.stopPropagation();
+        toggleFavorite(item);
+    };
 
     return (
         <div className="home-wrapper animate-enter">
@@ -17,41 +62,42 @@ const MCH = () => {
             />
 
             <div className="dashboard-grid">
-                <GlassCard className="dashboard-card animate-pop delay-100" onClick={() => navigate('/programs/mch/anc')} hoverEffect={true}>
-                    <div className="icon-circle" style={{ color: '#9c27b0' }}>
-                        <MaterialIcon name="how_to_reg" size={32} />
-                    </div>
-                    <h3>ANC Registration</h3>
-                </GlassCard>
+                {programs.map((item, index) => {
+                    const fav = isFavorite(item.path);
+                    return (
+                        <GlassCard
+                            key={item.id}
+                            className={`dashboard-card animate-pop delay-${(index + 1) * 100}`}
+                            onClick={() => navigate(item.path)}
+                            hoverEffect={true}
+                            style={{ position: 'relative' }} // For absolute star
+                        >
+                            {/* Favorite Star */}
+                            <div
+                                onClick={(e) => handleFavorite(e, item)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    right: '10px',
+                                    color: fav ? '#FFD700' : 'var(--neu-border-color)',
+                                    cursor: 'pointer',
+                                    zIndex: 10,
+                                    padding: '5px',
+                                    borderRadius: '50%',
+                                    background: 'var(--neu-bg)',
+                                    boxShadow: fav ? 'var(--shadow-flat)' : 'none'
+                                }}
+                            >
+                                <MaterialIcon name={fav ? "star" : "star_border"} size={24} />
+                            </div>
 
-                <GlassCard className="dashboard-card animate-pop delay-200" onClick={() => navigate('/programs/mch/edd-vs-deliveries')} hoverEffect={true}>
-                    <div className="icon-circle" style={{ color: '#e91e63' }}>
-                        <MaterialIcon name="pregnant_woman" size={32} />
-                    </div>
-                    <h3>EDD vs Deliveries</h3>
-                </GlassCard>
-
-                <GlassCard className="dashboard-card animate-pop delay-300" onClick={() => navigate('/programs/mch/maternal-death-audit')} hoverEffect={true}>
-                    <div className="icon-circle" style={{ color: '#f44336' }}>
-                        <MaterialIcon name="medical_services" size={32} />
-                    </div>
-                    {/* Allow text wrap */}
-                    <h3 style={{ whiteSpace: 'normal' }}>Maternal Death Audit</h3>
-                </GlassCard>
-
-                <GlassCard className="dashboard-card animate-pop delay-400" onClick={() => navigate('/programs/mch/child-death-audit')} hoverEffect={true}>
-                    <div className="icon-circle" style={{ color: '#ff9800' }}>
-                        <MaterialIcon name="baby_changing_station" size={32} />
-                    </div>
-                    <h3 style={{ whiteSpace: 'normal' }}>Child Death Audit</h3>
-                </GlassCard>
-
-                <GlassCard className="dashboard-card animate-pop delay-500" onClick={() => navigate('/programs/mch/aefi-audit')} hoverEffect={true}>
-                    <div className="icon-circle" style={{ color: '#90a4ae' }}>
-                        <MaterialIcon name="vaccines" size={32} />
-                    </div>
-                    <h3 style={{ whiteSpace: 'normal' }}>AEFI Audit</h3>
-                </GlassCard>
+                            <div className="icon-circle" style={{ color: item.color }}>
+                                <MaterialIcon name={item.icon} size={32} />
+                            </div>
+                            <h3 style={{ whiteSpace: 'normal' }}>{item.title}</h3>
+                        </GlassCard>
+                    );
+                })}
             </div>
         </div>
     );

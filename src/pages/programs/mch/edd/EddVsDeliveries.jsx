@@ -403,36 +403,53 @@ const EddVsDeliveries = () => {
         }
     };
 
-    // --- REBUILD STATS (DEV TOOL) ---
+    // --- REBUILD STATS (DEV TOOL / DATA REPAIR) ---
     const rebuildStats = async () => {
-        if (!window.confirm("This will scan ALL records and rebuild the summary stats. Continue?")) return;
+        if (!window.confirm("DOCTOR FIX: This will repair all records, fix month groupings (Strict EDD), and rebuild the dashboard. This resolves the 'Dec 2025' issue.\n\nContinue?")) return;
 
         setLoadingDashboard(true);
         try {
             const { db } = await import('../../../../firebase');
             const { collection, getDocs, writeBatch, doc } = await import('firebase/firestore');
 
+            const batch = writeBatch(db);
+
+            // 1. CLEAR OLD SUMMARIES (To remove phantom months like Dec 2025 if empty)
+            const summarySnap = await getDocs(collection(db, "anc_monthly_summaries"));
+            summarySnap.docs.forEach(d => {
+                batch.delete(d.ref);
+            });
+
+            // 2. SCAN & REPAIR RECORDS
             const q = collection(db, "anc_records");
             const snapshot = await getDocs(q);
 
             const statsMap = {};
+            let fixedRecordsCount = 0;
 
             snapshot.docs.forEach(d => {
                 const data = d.data();
-                const mg = data.monthGroup || getMonthGroup(data.eddDate);
 
-                if (mg) {
-                    if (!statsMap[mg]) statsMap[mg] = getStatUpdates(null, null);
+                // FORCE Recalculate using new strict EDD logic
+                // We do NOT trust data.monthGroup as it might be corrupted by the previous bug
+                const realMg = getMonthGroup(data.eddDate, data.deliveryStatus, data.abortedDate, data.deliveredDate);
+
+                if (realMg) {
+                    // Update Record if it's in the wrong group
+                    if (data.monthGroup !== realMg) {
+                        batch.update(d.ref, { monthGroup: realMg });
+                        fixedRecordsCount++;
+                    }
+
+                    // Accumulate Stats
+                    if (!statsMap[realMg]) statsMap[realMg] = getStatUpdates(null, null);
 
                     const delta = getStatUpdates(null, data);
-                    Object.keys(delta).forEach(k => statsMap[mg][k] += delta[k]);
+                    Object.keys(delta).forEach(k => statsMap[realMg][k] += delta[k]);
                 }
             });
 
-            const batch = writeBatch(db);
-            // Setup initial map for existing summaries to delete/overwrite? 
-            // Ideally we overwrite.
-
+            // 3. WRITE NEW SUMMARIES
             Object.keys(statsMap).forEach(mg => {
                 const [m, y] = mg.split('-');
                 const cleanTitle = m.charAt(0).toUpperCase() + m.slice(1) + " " + y;
@@ -444,17 +461,21 @@ const EddVsDeliveries = () => {
                     sortDate: isNaN(sortDate) ? Date.now() : sortDate,
                     ...statsMap[mg]
                 };
-                // Ensure no negative
+                // Ensure no negative (safety)
                 Object.keys(summaryData).forEach(k => { if (typeof summaryData[k] === 'number' && summaryData[k] < 0) summaryData[k] = 0; });
 
                 batch.set(doc(db, "anc_monthly_summaries", mg), summaryData);
             });
 
             await batch.commit();
-            alert("Stats Rebuilt Successfully!");
+            alert(`Doctor Fix Complete!\n\n- Fixed ${fixedRecordsCount} records (moved to correct EDD Month)\n- Rebuilt System Stats\n- Removed empty/phantom dashboards.`);
+
+            // Reload dashboard manually
+            window.location.reload();
+
         } catch (e) {
             console.error(e);
-            alert("Rebuild Failed: " + e.message);
+            alert("Repair Failed: " + e.message);
         } finally {
             setLoadingDashboard(false);
         }

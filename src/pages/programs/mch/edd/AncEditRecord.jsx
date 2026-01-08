@@ -497,12 +497,19 @@ const AncEditRecord = () => {
             await runTransaction(db, async (transaction) => {
                 const recRef = doc(db, "anc_records", recordId);
 
-                // 2. Calculate Stat Changes
-                const oldData = originalDataRef.current;
-                const oldMonth = oldData?.monthGroup || getMonthGroup(oldData?.eddDate);
+                // --- 2a. READ LATEST DATA FIRST (Critical to avoid race conditions) ---
+                const currentDoc = await transaction.get(recRef);
+                let oldData = originalDataRef.current; // Fallback to local state if new doesn't exist (creation)
+                
+                if (currentDoc.exists()) {
+                    oldData = currentDoc.data();
+                }
+
+                // 2. Calculate Stat Changes based on TRUE DB STATE
+                const oldMonth = oldData?.monthGroup || getMonthGroup(oldData?.eddDate, oldData?.deliveryStatus, oldData?.abortedDate, oldData?.deliveredDate);
                 const newMonth = newData.monthGroup;
 
-                // --- 2a. READ ALL DATA FIRST (Required by Firestore) ---
+                // --- 2b. READ SUMMARIES ---
                 let oldSummarySnap = null;
                 let newSummarySnap = null;
 
@@ -515,11 +522,11 @@ const AncEditRecord = () => {
                     newSummarySnap = await transaction.get(doc(db, 'anc_monthly_summaries', newMonth));
                 }
 
-                // --- 2b. WRITE UPDATES ---
+                // --- 2c. WRITE UPDATES ---
 
                 // Scenario A: Month Changed (or Month added)
                 if (oldMonth && newMonth && oldMonth !== newMonth) {
-                    // Remove from Old
+                    // Remove from Old (Using strict DB state)
                     const removeDelta = getStatUpdates(oldData, null);
                     await updateMonthlySummary(transaction, db, oldMonth, removeDelta, oldSummarySnap);
 

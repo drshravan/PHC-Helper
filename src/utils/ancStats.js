@@ -1,18 +1,19 @@
 import { doc, increment } from 'firebase/firestore';
 
 export const getMonthGroup = (dateString, deliveryStatus = 'Pending', abortedDate = null, deliveredDate = null) => {
-    // If aborted, use abortedDate
-    if (deliveryStatus === 'Aborted' && abortedDate) {
-        return formatDateToMonthGroup(abortedDate);
-    }
-    // If delivered, use deliveredDate
-    if (deliveryStatus === 'Delivered' && deliveredDate) {
-        return formatDateToMonthGroup(deliveredDate);
-    }
-    // Fallback to EDD
+    // 1. Priority: EDD (Cohort Tracking)
     if (dateString) {
         return formatDateToMonthGroup(dateString);
     }
+
+    // 2. Fallbacks if EDD is missing
+    if (deliveryStatus === 'Aborted' && abortedDate) {
+        return formatDateToMonthGroup(abortedDate);
+    }
+    if (deliveryStatus === 'Delivered' && deliveredDate) {
+        return formatDateToMonthGroup(deliveredDate);
+    }
+
     return null;
 };
 
